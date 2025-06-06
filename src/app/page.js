@@ -53,7 +53,7 @@ export default function Home() {
         </section>
 
         {/* Collections Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <section className="py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Our Collections</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -101,7 +101,7 @@ export default function Home() {
         </section>
 
         {/* Story Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-gray-100">
+        <section className="py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-gray-100">
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2">
               <Image
@@ -130,7 +130,7 @@ export default function Home() {
         </section>
 
         {/* Corporate Gifting CTA */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+        <section className="py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6">Corporate Gifting</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
             Elevate your corporate gifts with our courage and talent

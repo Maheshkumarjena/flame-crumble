@@ -106,9 +106,12 @@ export default function AdminDashboard() {
         <meta name="description" content="Admin dashboard" />
       </Head>
       
-      <Navbar />
       
-      <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <main className="min-h-screen py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className='absolute opacity-100 z-100 inset-0'>
+                <Navbar />
+
+          </div>
         <h1 className="text-3xl font-bold mb-2">Welcome back, Admin</h1>
         <p className="text-gray-600 mb-8">Here's what's happening today, May 6, 2025</p>
         

@@ -58,10 +58,15 @@ export default function Wishlist() {
         <meta name="description" content="Your saved items" />
       </Head>
       
-      <Navbar />
       
-      <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">flame&crumble</h1>
+      <main className="min-h-screen py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className='absolute opacity-100 z-100 inset-0'>
+                <Navbar />
+    {/* <div className="border-b border-gray-200 mt-0"></div> */}
+    {/* <hr/> */}
+
+          </div>
+        {/* <h1 className="text-3xl font-bold mb-8">flame&crumble</h1> */}
         
         <div className="mb-8">
           <h2 className="text-2xl font-semibold">My Wishlist</h2>

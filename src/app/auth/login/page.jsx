@@ -51,9 +51,12 @@ export default function LoginPage() {
         <meta name="description" content="Login to your account" />
       </Head>
       
-      <Navbar />
       
-      <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <main className="min-h-screen py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className='absolute opacity-100 z-100 inset-0'>
+                <Navbar />
+
+          </div>
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md overflow-hidden">
           <div className="bg-black text-white p-6">
             <h1 className="text-2xl font-bold">Welcome Back</h1>
