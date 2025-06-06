@@ -41,12 +41,9 @@ export default function Corporate() {
         <meta name="description" content="Corporate gifting solutions" />
       </Head>
       
+      <Navbar />
       
-      <main className="min-h-screen py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className='absolute opacity-100 z-100 inset-0'>
-                <Navbar />
-
-          </div>
+      <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Corporate Gifting Solutions</h1>
         <p className="text-xl mb-12 max-w-3xl">
           Delight your clients and employees with premium, customized gift experiences.

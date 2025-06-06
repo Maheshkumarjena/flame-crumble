@@ -14,7 +14,7 @@ const togglePageScroll = (disable) => {
     }
 };
 
-const Navbar = () => {
+const Navbar = ({ textColor = 'text-black' }) => { // Destructure textColor prop with a default value
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
 
@@ -52,7 +52,7 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
-                        <Link href="/" className="text-xl font-bold text-black">
+                        <Link href="/" className={`text-xl font-bold ${textColor}`}>
                             flame&crumble
                         </Link>
                     </div>
@@ -63,7 +63,7 @@ const Navbar = () => {
                             <Link
                                 key={item.name}
                                 href={item.path}
-                                className={`${router.pathname === item.path ? 'text-[#E30B5D]' : 'text-black'} hover:text-[#E30B5D] transition-colors`}
+                                className={`${router.pathname === item.path ? 'text-[#E30B5D]' : textColor} hover:text-[#E30B5D] transition-colors`}
                             >
                                 {item.name}
                             </Link>
@@ -72,13 +72,13 @@ const Navbar = () => {
                     </div>
 
                     <div className="hidden md:flex items-center space-x-6">
-                        <Link href="/wishlist" className="text-black hover:text-[#E30B5D]">
+                        <Link href="/wishlist" className={`${textColor} hover:text-[#E30B5D]`}>
                             <FiHeart size={20} />
                         </Link>
-                        <Link href="/cart" className="text-black hover:text-[#E30B5D]">
+                        <Link href="/cart" className={`${textColor} hover:text-[#E30B5D]`}>
                             <FiShoppingCart size={20} />
                         </Link>
-                        <Link href="/account" className="text-black hover:text-[#E30B5D]">
+                        <Link href="/account" className={`${textColor} hover:text-[#E30B5D]`}>
                             <FiUser size={20} />
                         </Link>
                     </div>
@@ -87,7 +87,7 @@ const Navbar = () => {
                     <div className="md:hidden flex items-center z-[1000]">
                         <button
                             onClick={handleToggleMenu}
-                            className="text-black hover:text-[#E30B5D] focus:outline-none"
+                            className={`${textColor} hover:text-[#E30B5D] focus:outline-none`}
                             aria-controls="mobile-menu"
                             aria-expanded={isOpen}
                         >
@@ -99,32 +99,32 @@ const Navbar = () => {
 
             {/* Mobile Navigation */}
             <div
-                className={`md:hidden  mt-[-60] mb-40 left-0 w-full backdrop-blur-[10px] z-200 flex flex-col items-center justify-center transition-all duration-300 ease-in-out ${
+                className={`md:hidden mt-[-60] mb-40 left-0 w-full backdrop-blur-[10px] z-200 flex flex-col items-center justify-center transition-all duration-300 ease-in-out ${
                     isOpen ? 'h-screen opacity-100 translate-y-0' : 'h-0 opacity-0 -translate-y-full'
-                } overflow-hidden`} // Added overflow-hidden to hide content when collapsed
+                } overflow-hidden`}
             >
-                {isOpen && ( // Render content only when menu is open to allow transition to complete
+                {isOpen && (
                     <div className="px-2 pt-2 pb-3 space-y-4 sm:px-3 text-center">
                         {navItems.map((item) => (
                             <Link
                                 key={item.name}
                                 href={item.path}
                                 className={`${
-                                    router.pathname === item.path ? 'bg-[#E30B5D] text-white' : 'text-black'
+                                    router.pathname === item.path ? 'bg-[#E30B5D] text-white' : textColor
                                 } block px-6 py-3 rounded-md text-base text-[34px] border border-transparent hover:border-[#E30B5D] hover:scale-105 transition-all duration-200 ease-in-out`}
-                                onClick={handleMobileLinkClick} // Use the new handler
+                                onClick={handleMobileLinkClick}
                             >
                                 {item.name}
                             </Link>
                         ))}
                         <div className="flex justify-center space-x-6 px-3 py-2 mt-4">
-                            <Link href="/wishlist" className="text-black hover:text-[#E30B5D]" onClick={handleMobileLinkClick}>
+                            <Link href="/wishlist" className={`${textColor} hover:text-[#E30B5D]`} onClick={handleMobileLinkClick}>
                                 <FiHeart size={28} />
                             </Link>
-                            <Link href="/cart" className="text-black hover:text-[#E30B5D]" onClick={handleMobileLinkClick}>
+                            <Link href="/cart" className={`${textColor} hover:text-[#E30B5D]`} onClick={handleMobileLinkClick}>
                                 <FiShoppingCart size={28} />
                             </Link>
-                            <Link href="/account" className="text-black hover:text-[#E30B5D]" onClick={handleMobileLinkClick}>
+                            <Link href="/account" className={`${textColor} hover:text-[#E30B5D]`} onClick={handleMobileLinkClick}>
                                 <FiUser size={28} />
                             </Link>
                         </div>

@@ -20,10 +20,10 @@ export default function AboutPage() {
         to your <main> element, depending on your Navbar's height.
       */}
 
-      <main className="min-h-screen flex flex-col"> {/* Removed min-w-screen and overflow-x-hidden */}
+      <main className="min-h-screen flex z-300 flex-col"> {/* Removed min-w-screen and overflow-x-hidden */}
         {/* Hero Section */}
         <div className='absolute opacity-100 z-100 inset-0'>
-          <Navbar />
+<Navbar textColor="text-white" />
 
         </div>
         {/* Hero Section */}

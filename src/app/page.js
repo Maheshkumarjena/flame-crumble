@@ -18,8 +18,7 @@ export default function Home() {
         {/* Hero Section */}
         <section className="relative  h-screen flex items-center justify-center bg-black text-white">
           <div className='absolute opacity-100 z-100 inset-0'>
-                <Navbar />
-
+<Navbar textColor="text-white" />
           </div>
           <div className="absolute inset-0">
             <Image
@@ -61,19 +60,19 @@ export default function Home() {
               {
                 title: 'Candles',
                 description: 'Discover Comfort',
-                image: '/images/candles.jpg',
+                image: '/Lavender Fields Candle.jpg',
                 link: '/shop?category=candles',
               },
               {
                 title: 'Cookies',
                 description: 'Take Our Cookies',
-                image: '/images/cookies.jpg',
+                image: '/chocoCookeis.avif',
                 link: '/shop?category=cookies',
               },
               {
                 title: 'Artisan Chocolates',
                 description: 'Indulge in Chocolates',
-                image: '/images/chocolates.jpg',
+                image: '/Dark Chocolate Truffles.jpg',
                 link: '/shop?category=chocolates',
               },
             ].map((collection) => (
@@ -85,7 +84,7 @@ export default function Home() {
                   height={400}
                   className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 backdrop-blur-[1px] bg-opacity-40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <h3 className="text-2xl font-bold text-white">{collection.title}</h3>
                   <p className="text-white mb-4">{collection.description}</p>
                   <Link
@@ -105,7 +104,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2">
               <Image
-                src="/images/story.jpg"
+                src="/ourStory.avif"
                 alt="Our story"
                 width={600}
                 height={400}
@@ -144,8 +143,19 @@ export default function Home() {
         </section>
       </main>
 
-      <Footer />
-    </div>
+ {/* <Footer
+        backgroundColor="bg-rose-100"
+        textColor="text-black"
+        hoverColor="hover:text-rose-300"
+        socialLinks={[
+          { name: 'Facebook', url: 'https://facebook.com' },
+          { name: 'Instagram', url: 'https://instagram.com' },
+          { name: 'Twitter', url: 'https://twitter.com' },
+        ]}
+        copyrightText="Created with love by Flame&Crumble."
+      />
+       */}
+          </div>
 
   );
 }

@@ -64,12 +64,9 @@ export default function Cart() {
         <meta name="description" content="Your shopping cart" />
       </Head>
       
+      <Navbar />
       
-      <main className="min-h-screen py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className='absolute opacity-100 z-100 inset-0'>
-                <Navbar />
-
-          </div>
+      <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">flame&crumble</h1>
         
         <div className="flex flex-col lg:flex-row gap-12">
