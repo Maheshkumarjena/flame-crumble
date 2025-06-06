@@ -13,13 +13,11 @@ export default function Home() {
         <meta name="description" content="Premium handcrafted candles, cookies, and chocolates" />
       </Head>
 
+      <Navbar />
 
       <main>
         {/* Hero Section */}
         <section className="relative  h-screen flex items-center justify-center bg-black text-white">
-          <div className='absolute opacity-100 z-100 inset-0'>
-<Navbar textColor="text-white" />
-          </div>
           <div className="absolute inset-0">
             <Image
               src="/hero-bg.jpg"
@@ -28,7 +26,6 @@ export default function Home() {
               className="object-cover opacity-50"
             />
           </div>
-
           <div className="relative z-10 text-center px-4">
             <h1 className="text-4xl md:text-6xl font-bold mb-4">Handcrafted Delights</h1>
             <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
@@ -52,7 +49,7 @@ export default function Home() {
         </section>
 
         {/* Collections Section */}
-        <section className="py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Our Collections</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -60,19 +57,19 @@ export default function Home() {
               {
                 title: 'Candles',
                 description: 'Discover Comfort',
-                image: '/Lavender Fields Candle.jpg',
+                image: '/images/candles.jpg',
                 link: '/shop?category=candles',
               },
               {
                 title: 'Cookies',
                 description: 'Take Our Cookies',
-                image: '/chocoCookeis.avif',
+                image: '/images/cookies.jpg',
                 link: '/shop?category=cookies',
               },
               {
                 title: 'Artisan Chocolates',
                 description: 'Indulge in Chocolates',
-                image: '/Dark Chocolate Truffles.jpg',
+                image: '/images/chocolates.jpg',
                 link: '/shop?category=chocolates',
               },
             ].map((collection) => (
@@ -84,7 +81,7 @@ export default function Home() {
                   height={400}
                   className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 backdrop-blur-[1px] bg-opacity-40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <h3 className="text-2xl font-bold text-white">{collection.title}</h3>
                   <p className="text-white mb-4">{collection.description}</p>
                   <Link
@@ -100,11 +97,11 @@ export default function Home() {
         </section>
 
         {/* Story Section */}
-        <section className="py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-gray-100">
+        <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-gray-100">
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2">
               <Image
-                src="/ourStory.avif"
+                src="/images/story.jpg"
                 alt="Our story"
                 width={600}
                 height={400}
@@ -129,7 +126,7 @@ export default function Home() {
         </section>
 
         {/* Corporate Gifting CTA */}
-        <section className="py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+        <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6">Corporate Gifting</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
             Elevate your corporate gifts with our courage and talent
@@ -143,19 +140,8 @@ export default function Home() {
         </section>
       </main>
 
- {/* <Footer
-        backgroundColor="bg-rose-100"
-        textColor="text-black"
-        hoverColor="hover:text-rose-300"
-        socialLinks={[
-          { name: 'Facebook', url: 'https://facebook.com' },
-          { name: 'Instagram', url: 'https://instagram.com' },
-          { name: 'Twitter', url: 'https://twitter.com' },
-        ]}
-        copyrightText="Created with love by Flame&Crumble."
-      />
-       */}
-          </div>
+      <Footer />
+    </div>
 
   );
 }

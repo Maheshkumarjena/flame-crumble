@@ -50,7 +50,7 @@ const Navbar = ({ textColor = 'text-black' }) => { // Destructure textColor prop
     return (
         <nav className="relative bg-none shadow-md backdrop-blur-xs z-[999]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
+                <div className="flex justify-between h-10">
                     <div className="flex items-center">
                         <Link href="/" className={`text-xl font-bold ${textColor}`}>
                             flame&crumble
@@ -99,7 +99,7 @@ const Navbar = ({ textColor = 'text-black' }) => { // Destructure textColor prop
 
             {/* Mobile Navigation */}
             <div
-                className={`md:hidden mt-[-60] mb-40 left-0 w-full backdrop-blur-[10px] z-200 flex flex-col items-center justify-center transition-all duration-300 ease-in-out ${
+                className={`md:hidden  left-0 w-full backdrop-blur-[10px] z-200 flex flex-col items-center justify-center transition-all duration-300 ease-in-out ${
                     isOpen ? 'h-screen opacity-100 translate-y-0' : 'h-0 opacity-0 -translate-y-full'
                 } overflow-hidden`}
             >
