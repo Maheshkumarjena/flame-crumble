@@ -7,6 +7,7 @@ import { FiMail, FiLock, FiLogIn } from 'react-icons/fi';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import Button from '@/components/UI/Button';
+import axios from 'axios';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -15,34 +16,52 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Define your backend URL (make sure NEXT_PUBLIC_BACKEND_URL is set in your .env.local or environment)
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError(''); // Clear previous errors
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      // Use axios.post instead of fetch
+      const response = await axios.post(`${backendUrl}/api/auth/login`, { email, password }, {
+        withCredentials: true, // Important for sending/receiving cookies across domains
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      // Redirect to account page or previous page
-      const returnUrl = router.query.returnUrl || '/account';
+      // Axios automatically parses JSON and throws for non-2xx status codes
+      // So, if we reach here, it means the request was successful (2xx status)
+      
+      // Redirect to account page or previous page (if returnUrl is present)
+      // For Next.js App Router ('use client'), use useSearchParams to get query params
+      const returnUrl = new URLSearchParams(window.location.search).get('returnUrl') || '/account';
       router.push(returnUrl);
+
     } catch (err) {
-      setError(err.message);
+      // Axios errors have a response object with data
+      // For backend errors, the message is usually in err.response.data.error
+      if (axios.isAxiosError(err) && err.response) {
+        const { data } = err.response;
+        // Check for specific unverified email error from backend
+        if (data.error === 'Please verify your email to log in.') {
+          setError('Your email is not verified. Please verify your email to log in.');
+        } else {
+          setError(data.error || 'Login failed due to an unexpected error.');
+        }
+      } else if (err.request) {
+        // The request was made but no response was received (e.g., network error)
+        setError('No response from server. Please check your network connection or backend URL.');
+      } else {
+        // Something else happened while setting up the request
+        setError(`Error: ${err.message}`);
+      }
       setLoading(false);
     }
   };
+
+  // Check if the current error message is specifically about unverified email
+  const isUnverifiedEmailError = error.includes('Your email is not verified');
 
   return (
     <>
@@ -62,8 +81,18 @@ export default function LoginPage() {
           
           <div className="p-6">
             {error && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
                 <p>{error}</p>
+                {isUnverifiedEmailError && (
+                  <div className="mt-2 text-center">
+                    <Link 
+                      href={`/auth/verify-email?email=${encodeURIComponent(email)}`}
+                      className="font-medium text-[#E30B5D] hover:text-[#c5094f] underline"
+                    >
+                      Click here to verify your email
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
             

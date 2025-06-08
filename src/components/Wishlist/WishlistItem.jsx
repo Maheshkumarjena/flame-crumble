@@ -1,6 +1,9 @@
 import { FiTrash2, FiShoppingCart } from 'react-icons/fi';
 
 const WishlistItem = ({ item, onMoveToCart, onRemove }) => {
+  
+  
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="relative h-48 w-full">

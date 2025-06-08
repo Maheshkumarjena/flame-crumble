@@ -7,6 +7,11 @@ import { FiUser, FiMail, FiLock } from 'react-icons/fi';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import Button from '@/components/UI/Button';
+import axios from 'axios'; // Import axios
+
+// Get the backend URL from environment variables
+// In Next.js, public environment variables must be prefixed with NEXT_PUBLIC_
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -19,27 +24,45 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError(''); // Clear previous errors
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password }),
+      // Using axios for the POST request
+      const response = await axios.post(`${BACKEND_URL}/api/auth/register`, {
+        name,
+        email,
+        password,
+      }, {
+        // Axios handles content-type for JSON automatically with object body
+        withCredentials: true, // Important for sending/receiving cookies across domains
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-
-      // Redirect to login page
-      router.push('/auth/login');
+      // If the request is successful, axios throws an error for non-2xx status codes
+      // So, if we reach here, it means the request was successful (2xx status)
+      
+      // If registration is successful, redirect to the login page
+      // The JWT token will be set as an HTTP-only cookie by the backend
+router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
-      setError(err.message);
+      // Axios errors are typically in err.response for HTTP errors
+      if (err.response) {
+        const { data, status } = err.response;
+        // Handle validation errors from express-validator
+        if (status === 400 && data.errors && Array.isArray(data.errors)) {
+          // Join multiple validation error messages into a single string
+          const validationErrors = data.errors.map(valErr => valErr.msg).join('; ');
+          setError(validationErrors);
+        } else {
+          // Handle other backend errors (e.g., 409 Conflict, 500 Internal Server Error)
+          setError(data.error || 'Registration failed due to an unexpected error.');
+        }
+      } else if (err.request) {
+        // The request was made but no response was received (e.g., network error)
+        setError('No response from server. Please check your network connection or backend URL.');
+      } else {
+        // Something else happened while setting up the request
+        setError(`Error: ${err.message}`);
+      }
       setLoading(false);
     }
   };
@@ -62,7 +85,7 @@ export default function RegisterPage() {
           
           <div className="p-6">
             {error && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
                 <p>{error}</p>
               </div>
             )}
