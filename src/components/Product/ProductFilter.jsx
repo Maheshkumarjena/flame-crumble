@@ -1,13 +1,21 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Added useEffect for initialFilters
 
-const ProductFilter = ({ categories, onFilterChange }) => {
+const ProductFilter = ({ categories, onFilterChange, initialFilters }) => {
   const [activeFilters, setActiveFilters] = useState({
     category: 'all',
     sort: 'default',
     stock: false,
     newArrivals: false,
   });
+
+  // Use useEffect to update activeFilters when initialFilters prop changes
+  // This ensures the filter component resets correctly when filters are cleared in Shop.js
+  useEffect(() => {
+    if (initialFilters) {
+      setActiveFilters(initialFilters);
+    }
+  }, [initialFilters]);
 
   const handleFilterChange = (filterType, value) => {
     const newFilters = {
@@ -29,9 +37,10 @@ const ProductFilter = ({ categories, onFilterChange }) => {
             onChange={(e) => handleFilterChange('category', e.target.value)}
           >
             <option value="all">All</option>
+            {/* Corrected: Access category.value and category.label */}
             {categories.map((category) => (
-              <option key={category} value={category.toLowerCase()}>
-                {category}
+              <option key={category.value} value={category.value}>
+                {category.label}
               </option>
             ))}
           </select>
