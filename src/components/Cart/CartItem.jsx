@@ -43,6 +43,8 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
         />
       </div>
       
+      <div className='flex flex-col justify-between flex-grow h-full'>
+
       <div className="flex-grow">
         <h3 className="font-semibold text-lg">{item.name || 'Product Name'}</h3>
         {item.variant && <p className="text-gray-600 text-sm">{item.variant}</p>}
@@ -72,6 +74,8 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
           <FiTrash size={18} />
         </button>
       </div>
+      </div>
+
     </div>
   );
 };
