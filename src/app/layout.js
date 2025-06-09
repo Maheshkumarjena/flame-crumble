@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext";
+import { Providers } from "@/components/Providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,10 +23,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
         >
-        {/* <AuthProvider> */}
-
-        {children}
-        {/* </AuthProvider> */}
+        <Providers> {/* Wrap your application with Redux Provider */}
+          {children}
+        </Providers>
       </body>
     </html>
   );

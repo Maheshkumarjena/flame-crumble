@@ -7,61 +7,41 @@ import { FiMail, FiLock, FiLogIn } from 'react-icons/fi';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import Button from '@/components/UI/Button';
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux'; // Import Redux hooks
+import { loginUser } from '@/lib/features/auth/authSlice'; // Import the loginUser thunk
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  // Define your backend URL (make sure NEXT_PUBLIC_BACKEND_URL is set in your .env.local or environment)
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  
+  // Get state from Redux store using useSelector
+  // 'loading' and 'error' are directly from the auth slice state.
+  // 'isAuthenticated' can be used for conditional redirects if needed, but not directly for UI on this page.
+  const { loading, error: authError } = useSelector((state) => state.auth);
+  const dispatch = useDispatch(); // Get the dispatch function to send actions to the store
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(''); // Clear previous errors
+    // Dispatch the loginUser async thunk. This handles setting loading, error, and user state in Redux.
+    const resultAction = await dispatch(loginUser({ email, password }));
 
-    try {
-      // Use axios.post instead of fetch
-      const response = await axios.post(`${backendUrl}/api/auth/login`, { email, password }, {
-        withCredentials: true, // Important for sending/receiving cookies across domains
-      });
-
-      // Axios automatically parses JSON and throws for non-2xx status codes
-      // So, if we reach here, it means the request was successful (2xx status)
-      
-      // Redirect to account page or previous page (if returnUrl is present)
-      // For Next.js App Router ('use client'), use useSearchParams to get query params
+    // Check if the loginUser thunk was fulfilled (successful)
+    if (loginUser.fulfilled.match(resultAction)) {
+      // If login is successful, redirect the user.
+      // Use returnUrl from query params if available, otherwise default to '/account'.
       const returnUrl = new URLSearchParams(window.location.search).get('returnUrl') || '/account';
       router.push(returnUrl);
-
-    } catch (err) {
-      // Axios errors have a response object with data
-      // For backend errors, the message is usually in err.response.data.error
-      if (axios.isAxiosError(err) && err.response) {
-        const { data } = err.response;
-        // Check for specific unverified email error from backend
-        if (data.error === 'Please verify your email to log in.') {
-          setError('Your email is not verified. Please verify your email to log in.');
-        } else {
-          setError(data.error || 'Login failed due to an unexpected error.');
-        }
-      } else if (err.request) {
-        // The request was made but no response was received (e.g., network error)
-        setError('No response from server. Please check your network connection or backend URL.');
-      } else {
-        // Something else happened while setting up the request
-        setError(`Error: ${err.message}`);
-      }
-      setLoading(false);
+    } else {
+      // If the thunk was rejected (login failed), the error state in Redux will be updated.
+      // No need to set a local error state, as it's managed by Redux.
+      // We can log the error for debugging.
+      console.error('Login failed:', resultAction.payload || 'Unknown error during login.');
     }
   };
 
-  // Check if the current error message is specifically about unverified email
-  const isUnverifiedEmailError = error.includes('Your email is not verified');
+  // Check if the current error message from Redux state is specifically about unverified email
+  const isUnverifiedEmailError = authError?.includes('Your email is not verified') || authError?.includes('Please verify your email');
 
   return (
     <>
@@ -80,9 +60,10 @@ export default function LoginPage() {
           </div>
           
           <div className="p-6">
-            {error && (
+            {/* Display error message from Redux state */}
+            {authError && (
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
-                <p>{error}</p>
+                <p>{authError}</p>
                 {isUnverifiedEmailError && (
                   <div className="mt-2 text-center">
                     <Link 
@@ -160,10 +141,10 @@ export default function LoginPage() {
                   type="submit"
                   variant="primary"
                   className="w-full flex justify-center items-center"
-                  disabled={loading}
+                  disabled={loading} // Button disabled when loading
                 >
                   {loading ? (
-                    <span className="animate-spin mr-2">↻</span>
+                    <span className="animate-spin mr-2">↻</span> // Loading spinner
                   ) : (
                     <FiLogIn className="mr-2" />
                   )}
