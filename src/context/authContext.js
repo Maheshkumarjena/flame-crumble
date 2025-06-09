@@ -27,64 +27,6 @@ export function AuthProvider({ children }) {
 
   // --- Core Authentication Functions ---
 
-    const fetchCart = useCallback(async () => {
-    if (!isLoggedIn) { // Only fetch if user is logged in
-      setCart([]);
-      return;
-    }
-    setLoadingCart(true);
-    setCartError(null);
-    try {
-      const response = await axios.get(`${BACKEND_URL}/api/cart`, {
-        withCredentials: true,
-      });
-      setCart(response.data.items); // Assuming items are populated products
-    } catch (error) {
-      console.error('Failed to fetch user cart:', error);
-      if (axios.isAxiosError(error) && error.response && (error.response.status === 401 || error.response.status === 403)) {
-        setUser(null); // Clear user, will trigger re-check via useEffect
-        setCart([]);
-        router.push(`/auth/login?returnUrl=${encodeURIComponent(router.pathname)}`);
-      } else {
-        setCartError(error.response?.data?.error || 'Failed to load cart.');
-      }
-    } finally {
-      setLoadingCart(false);
-    }
-  }, [isLoggedIn, router, user]); // Include 'user' in dependency to re-run if user object changes
-
-
-
-    const fetchWishlist = useCallback(async () => {
-    if (!isLoggedIn) { // Only fetch if user is logged in
-      setWishlist([]);
-      return;
-    }
-    setLoadingWishlist(true);
-    setWishlistError(null);
-    try {
-      const response = await axios.get(`${BACKEND_URL}/api/wishlist`, {
-        withCredentials: true,
-      });
-      setWishlist(response.data.items); // Assuming items are populated products
-    } catch (error) {
-      console.error('Failed to fetch user wishlist:', error);
-      // Specific error handling for 401/403 (handled by checkAuthStatus, but for safety)
-      if (axios.isAxiosError(error) && error.response && (error.response.status === 401 || error.response.status === 403)) {
-        // This case should ideally be caught by checkAuthStatus and redirect,
-        // but if it happens mid-session, we can trigger a re-check or redirect.
-        setUser(null);
-        setWishlist([]);
-        router.push(`/auth/login?returnUrl=${encodeURIComponent(router.pathname)}`);
-      } else {
-        setWishlistError(error.response?.data?.error || 'Failed to load wishlist.');
-      }
-    } finally {
-      setLoadingWishlist(false);
-    }
-  }, [isLoggedIn, router, user]); // Include 'user' in dependency to re-run if user object changes
-
-
   // Function to check authentication status and update user state
   const checkAuthStatus = useCallback(async () => {
     setLoadingAuth(true);
@@ -155,6 +97,34 @@ export function AuthProvider({ children }) {
 
   // --- Wishlist Functions ---
 
+  const fetchWishlist = useCallback(async () => {
+    if (!isLoggedIn) { // Only fetch if user is logged in
+      setWishlist([]);
+      return;
+    }
+    setLoadingWishlist(true);
+    setWishlistError(null);
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/wishlist`, {
+        withCredentials: true,
+      });
+      setWishlist(response.data.items); // Assuming items are populated products
+    } catch (error) {
+      console.error('Failed to fetch user wishlist:', error);
+      // Specific error handling for 401/403 (handled by checkAuthStatus, but for safety)
+      if (axios.isAxiosError(error) && error.response && (error.response.status === 401 || error.response.status === 403)) {
+        // This case should ideally be caught by checkAuthStatus and redirect,
+        // but if it happens mid-session, we can trigger a re-check or redirect.
+        setUser(null);
+        setWishlist([]);
+        router.push(`/auth/login?returnUrl=${encodeURIComponent(router.pathname)}`);
+      } else {
+        setWishlistError(error.response?.data?.error || 'Failed to load wishlist.');
+      }
+    } finally {
+      setLoadingWishlist(false);
+    }
+  }, [isLoggedIn, router, user]); // Include 'user' in dependency to re-run if user object changes
 
   const toggleWishlistItem = useCallback(async (productId) => {
     if (!isLoggedIn) {
@@ -191,6 +161,31 @@ export function AuthProvider({ children }) {
 
   // --- Cart Functions ---
 
+  const fetchCart = useCallback(async () => {
+    if (!isLoggedIn) { // Only fetch if user is logged in
+      setCart([]);
+      return;
+    }
+    setLoadingCart(true);
+    setCartError(null);
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/cart`, {
+        withCredentials: true,
+      });
+      setCart(response.data.items); // Assuming items are populated products
+    } catch (error) {
+      console.error('Failed to fetch user cart:', error);
+      if (axios.isAxiosError(error) && error.response && (error.response.status === 401 || error.response.status === 403)) {
+        setUser(null); // Clear user, will trigger re-check via useEffect
+        setCart([]);
+        router.push(`/auth/login?returnUrl=${encodeURIComponent(router.pathname)}`);
+      } else {
+        setCartError(error.response?.data?.error || 'Failed to load cart.');
+      }
+    } finally {
+      setLoadingCart(false);
+    }
+  }, [isLoggedIn, router, user]); // Include 'user' in dependency to re-run if user object changes
 
   const addToCart = useCallback(async (productId, quantity = 1) => {
     if (!isLoggedIn) {
