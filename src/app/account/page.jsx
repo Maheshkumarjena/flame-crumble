@@ -9,7 +9,7 @@ import Footer from '@/components/Layout/Footer';
 import { FiEdit, FiPlus, FiChevronRight, FiClock, FiCheckCircle, FiTruck, FiShoppingCart, FiUser, FiMapPin, FiPackage, FiX, FiSave, FiTrash2 } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '@/lib/features/auth/cartSlice';
-import {  setAuthUser } from '@/lib/features/auth/authSlice';
+import { setAuthUser } from '@/lib/features/auth/authSlice';
 import axios from 'axios';
 import { selectIsAuthenticated, selectAuthUser, selectAuthLoading } from '@/lib/features/auth/selector';
 
@@ -22,9 +22,15 @@ import AccountDetailsSection from '@/components/UserAccount/AccountDetailsSectio
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
 export default function UserAccount() {
-  const [activeTab, setActiveTab] = useState('orders');
+  // Initialize activeTab from localStorage or default to 'orders'
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') { // Check if window is defined (client-side)
+      return localStorage.getItem('activeAccountTab') || 'orders';
+    }
+    return 'orders'; // Default for server-side rendering or initial hydration
+  });
   // Use a single loading state for the entire page's readiness
-  const [pageLoading, setPageLoading] = useState(true); 
+  const [pageLoading, setPageLoading] = useState(true);
   const [addresses, setAddresses] = useState([]);
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState(null);
@@ -32,10 +38,7 @@ export default function UserAccount() {
   const router = useRouter();
   const dispatch = useDispatch();
 
-  // We will *not* directly rely on isAuthenticated/authLoading from Redux for the initial page load logic
-  // to avoid the race condition during hydration. Instead, we'll mimic Wishlist's explicit check.
-  // We still select authUser from Redux to pass to child components and display the welcome message.
-  const authUser = useSelector(selectAuthUser); 
+  const authUser = useSelector(selectAuthUser);
 
   const [localMessage, setLocalMessage] = useState({ type: '', text: '' });
 
@@ -54,7 +57,7 @@ export default function UserAccount() {
         withCredentials: true,
       });
       // If the response is successful, it means the user is logged in
-      return response.data.loggedIn; 
+      return response.data.loggedIn;
     } catch (err) {
       console.error("Session check failed:", err);
       // If session check fails (e.g., token expired, network error), consider user as not logged in
@@ -92,6 +95,14 @@ export default function UserAccount() {
     }
   }, []);
 
+  // Effect to save the active tab to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activeAccountTab', activeTab);
+    }
+  }, [activeTab]);
+
+
   // Main effect for authentication and data loading on component mount/update
   useEffect(() => {
     const initializePage = async () => {
@@ -101,10 +112,6 @@ export default function UserAccount() {
 
       if (isLoggedIn) {
         try {
-          // If the `authUser` state from Redux is null here, it means the Redux store
-          // hasn't fully hydrated `authUser`. You might need to dispatch an action
-          // to fetch user details here if `checkSessionAuth` doesn't populate it and it's needed for rendering.
-          // For now, we assume `selectAuthUser` will eventually get populated by your auth setup.
           await Promise.all([
             fetchAddresses(),
             fetchOrders()
@@ -113,8 +120,6 @@ export default function UserAccount() {
           // Error in fetching addresses/orders, set error and keep page loading for error display
           console.error("Error fetching user data after successful auth:", err);
           setError("Failed to load user data. Please try again.");
-          // Optionally, redirect if data fetching fails critically
-          // router.push(`/auth/login?returnUrl=${encodeURIComponent('/account')}`);
         } finally {
           setPageLoading(false); // Stop loading once all data (or error) is handled
         }
@@ -217,7 +222,7 @@ export default function UserAccount() {
 
               {activeTab === 'account' && (
                 <AccountDetailsSection
-                  authUser={authUser} 
+                  authUser={authUser}
                   dispatch={dispatch}
                   setAuthUser={setAuthUser}
                   BACKEND_URL={BACKEND_URL}
@@ -238,7 +243,7 @@ export default function UserAccount() {
 const SidebarButton = ({ icon: Icon, label, active, onClick }) => (
   <button
     onClick={onClick}
-    className={`w-full text-left px-4 py-3 rounded-lg flex items-center font-medium transition-all duration-200 
+    className={`w-full text-left px-4 py-3 rounded-lg flex items-center font-medium transition-all duration-200
       ${active ? 'bg-[#E30B5D] text-white shadow-md' : 'text-gray-700 hover:bg-gray-100 hover:text-[#E30B5D]'}`}
   >
     <Icon className={`mr-3 text-xl ${active ? 'text-white' : 'text-gray-500 group-hover:text-[#E30B5D]'}`} />
