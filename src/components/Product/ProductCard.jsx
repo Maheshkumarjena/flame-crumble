@@ -3,52 +3,61 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { FiHeart, FiShoppingCart } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectWishlistItems, selectWishlistLoading , selectIsAuthenticated } from '@/lib/features/auth/selector';
+import { selectWishlistItems, selectWishlistLoading, selectIsAuthenticated } from '@/lib/features/auth/selector';
 import { addToCart } from '@/lib/features/auth/cartSlice';
 import { toggleWishlistItem } from '@/lib/features/auth/wishlistSlice';
-
+import { toast } from 'sonner'; // Ensure you have sonner installed for notifications
 
 const ProductCard = ({ product }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const dispatch = useDispatch();
 
-  // Use memoized selectors for better performance
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const wishlistItems = useSelector(selectWishlistItems);
   const loadingWishlist = useSelector(selectWishlistLoading);
 
-  const isInWishlist = wishlistItems.some(item => item.product?._id === product.id);
+
+  // console.log('Wishlist Items:', wishlistItems); // Debugging line to check wishlist items
+  const isInWishlist = wishlistItems.some(item => item.product?._id == product.id);
 
   const handleHeartClick = async () => {
     if (!isAuthenticated) {
-      alert('Please log in to add items to your wishlist!');
+      toast('Please log in to add items to your wishlist!');
       return;
     }
-    
+
+    // Always trigger the animation before dispatching the action
+    setIsAnimating(true);
+
     const resultAction = await dispatch(toggleWishlistItem(product.id));
 
+    // Reset the animation after a short delay, regardless of success or failure
+    // This allows the animation to play even if the API call is fast
+    setTimeout(() => setIsAnimating(false), 300); // Match this duration to your animation duration
+
     if (toggleWishlistItem.fulfilled.match(resultAction)) {
-      setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 300);
+      // Determine if it was added or removed for the toast message
+      const wasAdded = resultAction.payload.action === 'added'; // Assuming your payload includes an 'action' field
+      toast(`${product.name} ${wasAdded ? 'added to' : 'removed from'} Wishlist!`);
     } else {
       console.error('Failed to toggle wishlist:', resultAction.payload);
-      alert(resultAction.payload || 'Failed to update wishlist.');
+      toast(resultAction.payload || 'Failed to update wishlist.');
     }
   };
 
   const handleAddToCartClick = async () => {
     if (!isAuthenticated) {
-      alert('Please log in to add items to your cart!');
+      toast('Please log in to add items to your cart!');
       return;
     }
 
     const resultAction = await dispatch(addToCart({ productId: product.id, quantity: 1 }));
 
     if (addToCart.fulfilled.match(resultAction)) {
-      alert(`${product.name} added to cart!`);
+      toast(`${product.name} added to cart!`);
     } else {
       console.error('Failed to add to cart:', resultAction.payload);
-      alert(resultAction.payload || 'Failed to add item to cart.');
+      toast(resultAction.payload || 'Failed to add item to cart.');
     }
   };
 
@@ -68,18 +77,18 @@ const ProductCard = ({ product }) => {
             Bestseller
           </span>
         )}
-        {product.isNew && ( 
+        {product.isNew && (
           <span className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-md">
             New
           </span>
         )}
       </div>
-      
+
       <div className="p-4">
         <h3 className="font-semibold text-lg mb-1 truncate">{product.name}</h3>
         <p className="text-gray-600 text-sm mb-2 h-10 overflow-hidden">{product.description}</p>
         <p className="text-[#E30B5D] font-bold mb-3">${product.price ? product.price.toFixed(2) : 'N/A'}</p>
-        
+
         <div className="flex justify-between items-center">
           <button
             onClick={handleAddToCartClick}
@@ -97,8 +106,7 @@ const ProductCard = ({ product }) => {
             aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
             disabled={loadingWishlist}
           >
-            <FiHeart size={20} color={isInWishlist ? '#EF4444' : '#6B7280'} />
-          </button>
+            <FiHeart size={20} color={isInWishlist ? '#EF4444' : '#6B7280'} fill={isInWishlist ? '#EF4444' : 'none'} />          </button>
         </div>
       </div>
 

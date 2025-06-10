@@ -8,6 +8,12 @@ import ProductCard from '@/components/Product/ProductCard';
 import ProductFilter from '@/components/Product/ProductFilter';
 import axios from 'axios';
 
+// Redux imports
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchWishlist } from '@/lib/features/auth/wishlistSlice'; // Adjust path if necessary
+import { selectIsAuthenticated } from '@/lib/features/auth/selector'; // Adjust path if necessary
+
+
 // Define your backend URL from environment variables
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 const PRODUCTS_PER_PAGE = 9; // Define how many products to fetch per page
@@ -29,9 +35,18 @@ export default function Shop() {
 
     const categories = ['candles', 'cookies', 'chocolates'];
 
+    // Redux hooks
+    const dispatch = useDispatch();
+    const isAuthenticated = useSelector(selectIsAuthenticated);
+
+    // Effect to fetch the user's wishlist when the component mounts or auth status changes
+    useEffect(() => {
+        if (isAuthenticated) {
+            dispatch(fetchWishlist());
+        }
+    }, [dispatch, isAuthenticated]); // Dependencies: dispatch (stable), isAuthenticated (changes on login/logout)
+
     // Helper function to apply filters to the current `products` state
-    // This is purely for client-side filtering if the backend doesn't support it directly,
-    // or for re-sorting if the backend only sends raw data.
     const applyFrontendFilters = useCallback((allProds, filters) => {
         let result = [...allProds];
 
@@ -69,7 +84,7 @@ export default function Shop() {
                 break;
         }
         setFilteredProducts(result);
-    }, []); // No dependencies here, as it operates on arguments and state setters
+    }, []); // No dependencies needed here as it operates on arguments and stable setters
 
     // Function to fetch products from the backend API with pagination
     // `append` parameter determines if new products should be appended or replace existing ones
@@ -81,8 +96,6 @@ export default function Shop() {
                 page: page,
                 limit: PRODUCTS_PER_PAGE,
                 // Sending filter parameters to the backend.
-                // Your backend API at `${BACKEND_URL}/api/products` MUST support these query parameters
-                // (e.g., ?category=candles&inStock=true&sortBy=price-asc) for filtering and sorting.
                 category: filters.category !== 'all' ? filters.category : undefined,
                 inStock: filters.stock ? true : undefined, // Assuming backend expects 'true' boolean
                 isFeatured: filters.newArrivals ? true : undefined, // Assuming 'isFeatured' represents new arrivals
@@ -91,33 +104,23 @@ export default function Shop() {
 
             const response = await axios.get(`${BACKEND_URL}/api/products`, { params });
 
-            // FIX: Your backend directly returns an array of products, not an object with 'products' and 'totalProducts'.
-            const newProducts = response.data; // response.data is directly the array of products
+            // Backend directly returns an array of products
+            const newProducts = response.data;
 
-            // Heuristic for total products and hasMore when backend only returns an array
-            // If the number of products returned equals the limit, assume there might be more.
-            // This is less accurate than a backend-provided 'totalProducts' count.
-            const totalCountEstimate = append ? products.length + newProducts.length : newProducts.length;
-            setTotalProducts(totalCountEstimate);
+            // Use functional update for setProducts to avoid 'products' in dependency array
+            setProducts(prevProducts => {
+                const updatedProducts = append ? [...prevProducts, ...newProducts] : newProducts;
+                // Estimate total products based on what we've loaded
+                setTotalProducts(updatedProducts.length);
+                // Apply frontend filters to the entire accumulated list of products
+                applyFrontendFilters(updatedProducts, filters);
+                return updatedProducts;
+            });
 
-            let updatedProducts;
-            if (append) {
-                // Use functional update to get the latest `prevProducts`
-                setProducts(prevProducts => {
-                    updatedProducts = [...prevProducts, ...newProducts];
-                    return updatedProducts;
-                });
-            } else {
-                updatedProducts = newProducts;
-                setProducts(newProducts);
-            }
             setCurrentPage(page);
 
             // Set hasMore based on whether we received a full page of products
             setHasMore(newProducts.length === PRODUCTS_PER_PAGE);
-
-            // Apply filters on the newly fetched/updated 'products' array
-            applyFrontendFilters(updatedProducts, filters);
 
         } catch (err) {
             if (axios.isAxiosError(err) && err.response) {
@@ -129,12 +132,12 @@ export default function Shop() {
         } finally {
             setLoading(false);
         }
-    }, [applyFrontendFilters, products]); // `products` is here because `totalCountEstimate` depends on `products.length` for append.
+    }, [applyFrontendFilters]); // Removed `products` from dependencies, relying on functional update
 
     // Initial fetch when component mounts
     useEffect(() => {
         fetchProducts(1, currentFilters, false); // Fetch first page with initial filters
-    }, []); // Run once on mount
+    }, [fetchProducts, currentFilters]); // Added fetchProducts and currentFilters as dependencies for initial fetch
 
     // Handler for applying filters from ProductFilter component
     const handleFilterChange = (newFilters) => {
@@ -165,16 +168,13 @@ export default function Shop() {
                 )}
 
                 <div className="flex flex-col md:flex-row gap-8">
-                    {/* Main content area for product display */}
-                    <div className="w-full"> {/* Changed to w-full as sidebar is commented out */}
-                        {/* ProductFilter component, passing the lowercase categories */}
+                    <div className="w-full">
                         <ProductFilter
                             categories={categories.map(cat => ({ value: cat, label: cat.charAt(0).toUpperCase() + cat.slice(1) }))}
                             onFilterChange={handleFilterChange}
-                            initialFilters={currentFilters} // Pass current filters to reset correctly if needed
+                            initialFilters={currentFilters}
                         />
 
-                        {/* Loading spinner for initial load or when no products are loaded yet */}
                         {loading && products.length === 0 && !error ? (
                             <div className="flex justify-center items-center h-64">
                                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E30B5D]"></div>
@@ -183,18 +183,16 @@ export default function Shop() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {filteredProducts.length > 0 ? (
                                     filteredProducts.map((product) => (
-                                        // Use product._id as key and pass the product object directly
                                         <ProductCard key={product._id} product={{
                                             id: product._id, // Map backend _id to frontend id
                                             name: product.name,
                                             description: product.description || 'No description available',
                                             price: product.price,
                                             category: product.category,
-                                            // Prepend '/images/' to the image path from the backend
                                             image: product.image.startsWith('/') ? product.image : `/images/${product.image}`,
                                             stock: product.stock > 0, // Convert stock number to boolean
                                             isNew: product.isFeatured, // Using isFeatured as a proxy for new arrival
-                                            // bestseller: product.isBestSeller, // Add if you have a bestseller field in backend
+                                            // bestseller: product.isBestSeller, // Uncomment if you have this field
                                         }} />
                                     ))
                                 ) : (
@@ -216,13 +214,12 @@ export default function Shop() {
                             </div>
                         )}
 
-                        {/* Load More button */}
                         {hasMore && (
                             <div className="mt-8 flex justify-center">
                                 <button
                                     onClick={handleLoadMore}
                                     className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 transition-colors"
-                                    disabled={loading} // Disable button while loading more
+                                    disabled={loading}
                                 >
                                     {loading ? 'Loading More...' : 'Load More'}
                                 </button>

@@ -9,18 +9,11 @@ export const makeStore = () => {
   return configureStore({
     reducer: {
       auth: authReducer,
-      Wishlist:wishlistReducer,
+      wishlist:wishlistReducer,
       cart: cartReducer,
       // Add other slices here as your application grows (e.g., products, cart, wishlist)
     },
-    // Middleware and devtools are configured by default by configureStore
-    // You can customize them here if needed
+    
   });
 };
 
-// Define the AppStore type
-// export type AppStore = ReturnType<typeof makeStore>;
-// Define the RootState type
-// export type RootState = ReturnType<AppStore['getState']>;
-// Define the AppDispatch type
-// export type AppDispatch = AppStore['dispatch'];

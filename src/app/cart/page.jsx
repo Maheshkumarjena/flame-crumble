@@ -10,6 +10,7 @@ import CartItem from '@/components/Cart/CartItem';
 import { useDispatch, useSelector } from 'react-redux'; // Import Redux hooks
 import { fetchCart, updateCartItemQuantity, removeCartItem } from '@/lib/features/auth/cartSlice'; // Import cart thunks
 import { selectIsAuthenticated } from '@/lib/features/auth/selector';
+import { toast } from 'sonner'; // Ensure you have sonner installed for notifications
 
 export default function Cart() {
   const router = useRouter();
@@ -173,7 +174,7 @@ export default function Cart() {
                   onClick={(e) => { 
                     if (loadingCart) { 
                       e.preventDefault(); 
-                      alert('Please wait for current cart updates to complete before checking out.');
+                      toast('Please wait for current cart updates to complete before checking out.');
                     } 
                   }}
                 >

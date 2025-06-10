@@ -4,6 +4,7 @@ import { createSelector } from '@reduxjs/toolkit';
 // Basic selector to get the wishlist slice from the state
 const selectWishlistSlice = (state) => state.wishlist;
 
+
 // Memoized selector for wishlist items
 // It will only recompute if state.wishlist.items changes its reference.
 export const selectWishlistItems = createSelector(
