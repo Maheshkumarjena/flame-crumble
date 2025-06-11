@@ -5,7 +5,7 @@ import axios from 'axios';
 import { setAuthUser } from '@/lib/features/auth/authSlice';
 
 const AccountDetailsSection = ({ authUser, dispatch, BACKEND_URL, displayLocalMessage }) => {
-  console.log('Rendering AccountDetailsSection with authUser:', authUser); // Keep for debugging if needed
+  // console.log('Rendering AccountDetailsSection with authUser:', authUser); // Keep for debugging if needed
 
   const [isAccountEditing, setIsAccountEditing] = useState(false);
   // Initialize accountFormData directly from authUser prop.
@@ -15,7 +15,7 @@ const AccountDetailsSection = ({ authUser, dispatch, BACKEND_URL, displayLocalMe
     phone: authUser?.phone || '',
     email: authUser?.email || '' // Include email for completeness, but it will be read-only
   });
-  console.log("formData:", accountFormData); // Debugging line to check formData state
+  // console.log("formData:", accountFormData); // Debugging line to check formData state
 
   // Use useEffect to update form data if authUser prop changes (e.g., after a successful save
   // in handleSaveAccountDetails, or when authUser is initially loaded in the parent).

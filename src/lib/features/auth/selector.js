@@ -3,6 +3,7 @@ import { createSelector } from '@reduxjs/toolkit';
 
 // Basic selector to get the wishlist slice from the state
 const selectWishlistSlice = (state) => state.wishlist;
+console.log("selectWishlistSlice:", selectWishlistSlice);
 
 
 // Memoized selector for wishlist items
@@ -38,5 +39,11 @@ export const selectAuthLoading = createSelector(
   [selectAuthSlice],
   (auth) => auth?.loading || false
 );
+
+
+
+// NEW: Memoized selector to check if the user is an admin
+export const selectIsAdmin  = (state) => state.auth;
+
 
 

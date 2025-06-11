@@ -39,7 +39,7 @@ export default function UserAccount() {
   const dispatch = useDispatch();
 
   const authUser = useSelector(selectAuthUser);
-  console.log('authUser at parent account apge ----------------------------------------------:', authUser); // Debugging line to check authUser state
+  // console.log('authUser at parent account apge ----------------------------------------------:', authUser); // Debugging line to check authUser state
 
   const [localMessage, setLocalMessage] = useState({ type: '', text: '' });
 
