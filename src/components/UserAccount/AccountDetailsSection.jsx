@@ -1,64 +1,38 @@
 // components/UserAccount/AccountDetailsSection.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiEdit, FiSave } from 'react-icons/fi';
 import axios from 'axios';
-import { setAuthUser } from '@/lib/features/auth/authSlice'; // Make sure to import setAuthUser
+import { setAuthUser } from '@/lib/features/auth/authSlice';
 
 const AccountDetailsSection = ({ authUser, dispatch, BACKEND_URL, displayLocalMessage }) => {
+  console.log('Rendering AccountDetailsSection with authUser:', authUser); // Keep for debugging if needed
+
   const [isAccountEditing, setIsAccountEditing] = useState(false);
-  const [accountFormData, setAccountFormData] = useState({ name: '', phone: '' });
-  const [loadingUserDetails, setLoadingUserDetails] = useState(true);
-  const [userDetails, setUserDetails] = useState(null);
+  // Initialize accountFormData directly from authUser prop.
+  // This ensures the form's initial state is always in sync with Redux.
+  const [accountFormData, setAccountFormData] = useState({
+    name: authUser?.name || '',
+    phone: authUser?.phone || '',
+    email: authUser?.email || '' // Include email for completeness, but it will be read-only
+  });
+  console.log("formData:", accountFormData); // Debugging line to check formData state
 
-  // Use a ref to track if initial data has been loaded
-  const initialDataLoaded = React.useRef(false); // Using React.useRef
-
-  // Function to fetch user details
-  const fetchUserDetails = useCallback(async (userId) => {
-    if (!userId) {
-      setLoadingUserDetails(false);
-      return;
-    }
-    setLoadingUserDetails(true);
-    try {
-      const response = await axios.get(`${BACKEND_URL}/api/auth/${userId}`, {
-        withCredentials: true,
-      });
-      setUserDetails(response.data.user);
-      // Initialize form data with fetched details
-      setAccountFormData({
-        name: response.data.user.name || '',
-        phone: response.data.user.phone || ''
-      });
-      initialDataLoaded.current = true; // Mark as loaded
-    } catch (err) {
-      console.error('Error fetching user details:', err);
-      displayLocalMessage('error', err.response?.data?.error || 'Failed to load account details.');
-      setUserDetails(null);
-    } finally {
-      setLoadingUserDetails(false);
-    }
-  }, [BACKEND_URL, displayLocalMessage]); // Dependencies for useCallback
-
-  // Effect to fetch user details when authUser.userId changes, but ONLY if not already loaded
+  // Use useEffect to update form data if authUser prop changes (e.g., after a successful save
+  // in handleSaveAccountDetails, or when authUser is initially loaded in the parent).
   useEffect(() => {
-    // Only fetch if we have a userId and we haven't already loaded initial data
-    if (authUser?.userId && !initialDataLoaded.current) {
-      fetchUserDetails(authUser.userId);
-    } else if (!authUser?.userId) {
-      // If authUser.userId becomes null (e.g., logout), stop loading
-      setLoadingUserDetails(false);
-    }
-  }, [authUser?.userId]); // Dependencies
+    setAccountFormData({
+      name: authUser?.name || '',
+      phone: authUser?.phone || '',
+      email: authUser?.email || '' // Always keep email in sync, even if read-only
+
+    });
+  }, [authUser?.name, authUser?.phone]); // Depend on specific properties to avoid unnecessary re-runs
 
   // Handles account details editing
   const handleEditAccountClick = () => {
     setIsAccountEditing(true);
-    // When starting edit, always reset form data to current userDetails data
-    setAccountFormData({
-      name: userDetails?.name || '',
-      phone: userDetails?.phone || ''
-    });
+    // Form data is already synced by the useEffect above when entering edit mode,
+    // ensuring current Redux values are used.
   };
 
   const handleAccountFormChange = (e) => {
@@ -77,26 +51,16 @@ const AccountDetailsSection = ({ authUser, dispatch, BACKEND_URL, displayLocalMe
         phone: accountFormData.phone
       };
 
-      const response = await axios.put(`${BACKEND_URL}/api/auth/me/${authUser.userId}`, payload, {
+      // Backend endpoint for updating current user's profile: /api/users/me
+      // This assumes your backend's 'protect' middleware identifies the user from the token.
+      const response = await axios.put(`${BACKEND_URL}/api/auth/me/${authUser.id}`, payload, {
         withCredentials: true,
       });
 
-      // Update local userDetails state
-      setUserDetails(response.data.user);
-
-      // IMPORTANT: Only update Redux with *specific* user properties if the parent authUser
-      // only holds ID and loggedIn. If parent authUser *is* the full user object,
-      // this Redux update needs to be carefully managed to avoid triggering the useEffect again.
-      // If the parent `authUser` is *always* just `{loggedIn, userId}`,
-      // then updating it with more details here is fine, as it won't change the `userId` prop.
-      // If the parent `authUser` *could* become the full object, this is where the loop happens.
-      // Assuming parent `authUser` remains `{loggedIn, userId}` from the `UserAccount` component's perspective:
-      dispatch(setAuthUser({
-        ...authUser, // Keep existing loggedIn, userId
-        name: response.data.user.name,
-        email: response.data.user.email,
-        phone: response.data.user.phone,
-      }));
+      // Update Redux state with the new user details received from the backend response.
+      // This is crucial to keep the global Redux state consistent and
+      // will trigger the useEffect above to re-sync accountFormData.
+      dispatch(setAuthUser(response.data.user));
 
       setIsAccountEditing(false);
       displayLocalMessage('success', 'Account details updated successfully!');
@@ -108,27 +72,23 @@ const AccountDetailsSection = ({ authUser, dispatch, BACKEND_URL, displayLocalMe
 
   const handleCancelAccountEdit = () => {
     setIsAccountEditing(false);
-    // Reset form data to current userDetails data
+    // Reset form data to current authUser data from Redux state when cancelling.
     setAccountFormData({
-      name: userDetails?.name || '',
-      phone: userDetails?.phone || ''
+      name: authUser?.name || '',
+      phone: authUser?.phone || ''
     });
   };
 
-  // Show loading spinner while fetching user details
-  if (loadingUserDetails) {
+  // If authUser is null, it means the parent component (pages/account.js)
+  // is still loading or the user is not authenticated. In pages/account.js,
+  // we already handle showing a loader or redirecting if authUser is null.
+  // So, if we reach here, authUser should ideally be populated.
+  // However, as a defensive measure, we can return a loader if authUser is unexpectedly null.
+  // The primary loading state for auth should be handled in the parent.
+  if (!authUser) {
     return (
       <section className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-6 flex items-center justify-center h-48">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#E30B5D]"></div>
-      </section>
-    );
-  }
-
-  // If userDetails is null after loading (e.g., failed to fetch)
-  if (!userDetails) {
-    return (
-      <section className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-6 text-center text-red-600">
-        <p>Could not load account details. Please try again later.</p>
       </section>
     );
   }
@@ -163,7 +123,7 @@ const AccountDetailsSection = ({ authUser, dispatch, BACKEND_URL, displayLocalMe
               id="email"
               name="email"
               type="email"
-              value={userDetails.email || ''}
+              value={authUser.email || ''} // Always directly from authUser prop, not editable
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E30B5D] focus:border-transparent transition duration-200 bg-gray-50 cursor-not-allowed"
               readOnly
             />
