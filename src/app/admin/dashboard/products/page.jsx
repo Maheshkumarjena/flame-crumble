@@ -312,6 +312,7 @@ const ProductManagement = () => {
                 }
             }
 
+            console.log('Image URL after upload:', imageUrl);
             // Prepare product data for backend
             const productData = {
                 ...currentProduct,
@@ -319,11 +320,12 @@ const ProductManagement = () => {
                 price: parseFloat(currentProduct.price),
                 stock: parseInt(currentProduct.stock)
             };
+            console.log('Product data to save:', productData);
 
             // Remove unused fields before sending
-            delete productData.__v;
-            delete productData.createdAt;
-            delete productData.updatedAt;
+            // delete productData.__v;
+            // delete productData.createdAt;
+            // delete productData.updatedAt;
 
             // Determine if we're creating or updating
             const request = currentProduct._id
@@ -335,6 +337,7 @@ const ProductManagement = () => {
                 });
 
             const response = await request;
+            console.l
             setSuccessMessage(response.data.message || (currentProduct._id ? 'Product updated successfully!' : 'Product added successfully!'));
 
             setIsModalOpen(false);
