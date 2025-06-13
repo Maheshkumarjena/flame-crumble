@@ -1,44 +1,73 @@
-// lib/features/auth/authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
+// Helper function for consistent error handling
+const handleAuthError = (error) => {
+  if (error.response) {
+    // Server responded with error status
+    return {
+      message: error.response.data?.error || 'Authentication failed',
+      status: error.response.status,
+      isNetworkError: false
+    };
+  } else if (error.request) {
+    // Request made but no response
+    return {
+      message: 'Network error - unable to reach server',
+      status: null,
+      isNetworkError: true
+    };
+  }
+  // Other errors
+  return {
+    message: error.message || 'An unexpected error occurred',
+    status: null,
+    isNetworkError: false
+  };
+};
 
 // Async Thunk for User Login
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      console.log('Attempting login with:', email, password);
-      const response = await axios.post(`${BACKEND_URL}/api/auth/login`, { email, password }, {
-        withCredentials: true,
-      });
-      console.log('Login successful:', response.data.user);
-      return response.data.user; // Returning full user object
+      const response = await axios.post(`${BACKEND_URL}/api/auth/login`, 
+        { email, password },
+        { withCredentials: true }
+      );
+      return {
+        user: response.data.user,
+        timestamp: Date.now()
+      };
     } catch (error) {
-      console.error('Login failed:', error.response?.data.error || error.message);
-      return rejectWithValue(error.response?.data.error || 'Login failed. Please try again.');
+      return rejectWithValue(handleAuthError(error));
     }
   }
 );
 
-// Async Thunk for Checking Auth Status
+// Async Thunk for Checking Auth Status with caching
 export const checkAuthStatus = createAsyncThunk(
   'auth/checkAuthStatus',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+    
+    // Skip if we recently checked (5 minute cache)
+    if (auth.lastChecked && (Date.now() - auth.lastChecked < 300000)) {
+      return;
+    }
+
     try {
-      console.log('Checking authentication status...');
       const response = await axios.get(`${BACKEND_URL}/api/auth/status`, {
         withCredentials: true,
       });
-      console.log('Auth status:', response.data);
-      return response.data;
+      return {
+        user: response.data,
+        timestamp: Date.now()
+      };
     } catch (error) {
-      console.error('Auth check failed:', error.response?.data.error || error.message);
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        return rejectWithValue('Not authenticated.');
-      }
-      return rejectWithValue(error.response?.data.error || 'Failed to check authentication status.');
+      return rejectWithValue(handleAuthError(error));
     }
   }
 );
@@ -48,15 +77,12 @@ export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async (_, { rejectWithValue }) => {
     try {
-      console.log('Logging out user...');
       await axios.post(`${BACKEND_URL}/api/auth/logout`, {}, {
         withCredentials: true,
       });
-      console.log('Logout successful.');
-      return true; // Indicate success
+      return { timestamp: Date.now() };
     } catch (error) {
-      console.error('Logout failed:', error.response?.data.error || error.message);
-      return rejectWithValue(error.response?.data.error || 'Logout failed. Please try again.');
+      return rejectWithValue(handleAuthError(error));
     }
   }
 );
@@ -65,97 +91,111 @@ export const logoutUser = createAsyncThunk(
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
-    userId: null,
     user: null,
     loading: false,
     error: null,
     isAuthenticated: false,
+    isAdmin: false,
+    lastChecked: null,
+    initialized: false
   },
   reducers: {
-    clearAuth: (state) => {
-      console.log('Clearing authentication state...');
-      state.userId = null;
+    // Manual state reset
+    resetAuth: (state) => {
       state.user = null;
-      state.isAuthenticated = false;
       state.loading = false;
       state.error = null;
+      state.isAuthenticated = false;
+      state.isAdmin = false;
+      state.lastChecked = null;
     },
-    setAuthUser: (state, action) => {
-      console.log('Setting authenticated user:', action.payload);
-      state.user = action.payload;
-      state.userId = action.payload?.id || null;
-      state.isAuthenticated = !!action.payload?.id;
-    },
+    // Silent refresh for token updates
+    updateAuthToken: (state, action) => {
+      if (state.user) {
+        state.user.accessToken = action.payload.token;
+        state.lastChecked = Date.now();
+      }
+    }
   },
   extraReducers: (builder) => {
     builder
-      // Login User
+      // Login User Cases
       .addCase(loginUser.pending, (state) => {
-        console.log('Login request initiated...');
         state.loading = true;
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        console.log('Login successful:', action.payload);
         state.loading = false;
-        state.user = action.payload;
-        state.userId = action.payload.id;
+        state.user = action.payload.user;
         state.isAuthenticated = true;
-        console.log('User authenticated:', state.user);
+        state.isAdmin = action.payload.user.role === 'admin';
+        state.lastChecked = action.payload.timestamp;
+        state.initialized = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
-        console.error('Login failed:', action.payload);
         state.loading = false;
         state.error = action.payload;
-        state.userId = null;
-        state.user = null;
-        state.isAuthenticated = false;
+        state.initialized = true;
       })
-      // Check Auth Status
+
+      // Check Auth Status Cases
       .addCase(checkAuthStatus.pending, (state) => {
-        console.log('Checking authentication...');
-        state.loading = true;
+        if (!state.initialized) {
+          state.loading = true;
+        }
         state.error = null;
       })
       .addCase(checkAuthStatus.fulfilled, (state, action) => {
-        console.log('User is authenticated:', action.payload);
-        state.loading = false;
-        state.user = action.payload;
-        state.userId = action.payload.id;
-        state.isAuthenticated = true;
+        if (action.payload) { // Skip if cached
+          state.loading = false;
+          state.user = action.payload.user;
+          state.isAuthenticated = true;
+          state.isAdmin = action.payload.user.role === 'admin';
+          state.lastChecked = action.payload.timestamp;
+        }
+        state.initialized = true;
       })
       .addCase(checkAuthStatus.rejected, (state, action) => {
-        console.error('Auth check failed:', action.payload);
         state.loading = false;
-        state.error = action.payload === 'Not authenticated.' ? null : action.payload;
-        state.userId = null;
-        state.user = null;
-        state.isAuthenticated = false;
+        
+        // Only reset auth state for 401/403 errors
+        if (action.payload?.status === 401 || action.payload?.status === 403) {
+          state.user = null;
+          state.isAuthenticated = false;
+          state.isAdmin = false;
+        }
+        
+        state.error = action.payload;
+        state.initialized = true;
       })
-      // Logout User
+
+      // Logout User Cases
       .addCase(logoutUser.pending, (state) => {
-        console.log('Logging out...');
         state.loading = true;
         state.error = null;
       })
       .addCase(logoutUser.fulfilled, (state) => {
-        console.log('User logged out.');
         state.loading = false;
-        state.userId = null;
         state.user = null;
         state.isAuthenticated = false;
+        state.isAdmin = false;
+        state.lastChecked = null;
       })
       .addCase(logoutUser.rejected, (state, action) => {
-        console.error('Logout failed:', action.payload);
         state.loading = false;
         state.error = action.payload;
-        state.userId = null;
-        state.user = null;
-        state.isAuthenticated = false;
       });
-  },
+  }
 });
 
-console.log('Auth slice created:', authSlice.name);
-export const { clearAuth, setAuthUser } = authSlice.actions;
+export const { resetAuth, updateAuthToken } = authSlice.actions;
+
+// Selectors
+export const selectCurrentUser = (state) => state.auth.user;
+export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
+export const selectIsAdmin = (state) => state.auth.isAdmin;
+export const selectAuthLoading = (state) => state.auth.loading;
+export const selectAuthError = (state) => state.auth.error;
+export const selectAuthInitialized = (state) => state.auth.initialized;
+
 export default authSlice.reducer;

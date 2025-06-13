@@ -1,105 +1,108 @@
 'use client';
-import { useState, useEffect } from 'react'; // Added useEffect
+import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Imported for redirection
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import WishlistItem from '@/components/Wishlist/WishlistItem';
-import axios from 'axios'; // Imported axios
-import { checkAuthStatus } from '@/utils/authUtils'; // Import the authentication utility function
+import axios from 'axios';
 
-// Define your backend URL from environment variables
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
 export default function Wishlist() {
   const [wishlistItems, setWishlistItems] = useState([]);
-  const [loading, setLoading] = useState(true); // State to manage loading status
-  const [error, setError] = useState(''); // State to manage error messages
-  const router = useRouter(); // Initialize useRouter for redirection
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
+  const [operationError, setOperationError] = useState('');
+  const router = useRouter();
 
-  // Function to fetch the user's wishlist from the backend
-  const fetchWishlist = async () => {
-    setLoading(true); // Set loading to true before fetching
-    setError(''); // Clear any previous errors
+  // Memoized fetch function with proper error handling
+  const fetchWishlist = useCallback(async () => {
+    setLoading(true);
+    setFetchError('');
     try {
       const response = await axios.get(`${BACKEND_URL}/api/wishlist`, {
-        withCredentials: true, // Important: Sends HTTP-only cookies (JWT token) with the request
+        withCredentials: true,
       });
-      // Assuming the backend returns the wishlist in a structure like { items: [...] }
-      setWishlistItems(response.data.items); 
+      setWishlistItems(response.data.items);
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response) {
-        // If the server responds with 401 (Unauthorized) or 403 (Forbidden), redirect to login
-        if (err.response.status === 401 || err.response.status === 403) {
-          // Redirect to login page, passing the current path as a returnUrl query parameter
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401 || err.response?.status === 403) {
           router.push(`/auth/login?returnUrl=${encodeURIComponent('/wishlist')}`);
-        } else {
-          // Display other backend errors
-          setError(err.response.data.error || 'Failed to load wishlist. Please try again.');
+          return; // Important to return after redirect
         }
+        setFetchError(err.response?.data?.error || 'Failed to load wishlist');
       } else {
-        // Handle network errors or other unexpected issues
-        setError('Network error or unexpected issue. Please check your internet connection.');
+        setFetchError('Network error. Please try again.');
       }
     } finally {
-      setLoading(false); // Set loading to false after fetch attempt
+      setLoading(false);
     }
-  };
+  }, [router]);
 
- useEffect(() => {
-    const authenticateAndFetch = async () => {
-      const isLoggedIn = await checkAuthStatus();
-      if (isLoggedIn) {
-        fetchWishlist(); // Only fetch wishlist if logged in
-      } else {
-        // If not logged in, redirect to the login page
-        router.push(`/auth/login?returnUrl=${encodeURIComponent('/wishlist')}`);
+  useEffect(() => {
+    const controller = new AbortController();
+    
+    const loadData = async () => {
+      try {
+        // Check auth and fetch in one flow
+        await axios.get(`${BACKEND_URL}/api/auth/status`, {
+          withCredentials: true,
+          signal: controller.signal
+        });
+        await fetchWishlist();
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          if (err.response?.status === 401 || err.response?.status === 403) {
+            router.push(`/auth/login?returnUrl=${encodeURIComponent('/wishlist')}`);
+          } else if (!err.message.includes('canceled')) {
+            setFetchError(err.response?.data?.error || 'Authentication check failed');
+          }
+        }
       }
     };
-    authenticateAndFetch();
-  }, []); // Run once on mount
 
-  // Function to remove an item from the wishlist
+    loadData();
+
+    return () => controller.abort();
+  }, [fetchWishlist, router]);
+
   const removeItem = async (productId) => {
-    setError(''); // Clear any previous errors
+    setOperationError('');
     try {
       await axios.delete(`${BACKEND_URL}/api/wishlist/${productId}`, {
         withCredentials: true,
       });
-      // After successful removal, refetch the entire wishlist to ensure UI is in sync
-      fetchWishlist(); 
-      // Optionally, show a success toast/notification
+      // Optimistic update instead of refetching
+      setWishlistItems(prev => prev.filter(item => item.product._id !== productId));
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.error || 'Failed to remove item from wishlist.');
-      } else {
-        setError('Network error or unexpected issue.');
-      }
+      setOperationError(
+        axios.isAxiosError(err) 
+          ? err.response?.data?.error || 'Failed to remove item'
+          : 'Network error'
+      );
+      // Revert UI if needed by calling fetchWishlist()
     }
   };
 
-  // Function to move an item from the wishlist to the cart
   const moveToCart = async (product) => {
-    setError(''); // Clear any previous errors
+    setOperationError('');
     try {
-      // First, add the product to the cart
-      await axios.post(`${BACKEND_URL}/api/cart`, { 
-        productId: product._id, // Use the actual product's _id from the fetched item
-        quantity: 1 // Default quantity to 1 when moving from wishlist to cart
+      await axios.post(`${BACKEND_URL}/api/cart`, {
+        productId: product._id,
+        quantity: 1
       }, {
         withCredentials: true,
       });
-
-      // If successfully added to cart, then remove it from the wishlist
-      await removeItem(product._id); 
-      // Optionally, show a success toast/notification: "Item moved to cart successfully!"
+      // Optimistic update for both operations
+      setWishlistItems(prev => prev.filter(item => item.product._id !== product._id));
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.error || 'Failed to move item to cart.');
-      } else {
-        setError('Network error or unexpected issue.');
-      }
+      setOperationError(
+        axios.isAxiosError(err)
+          ? err.response?.data?.error || 'Failed to move to cart'
+          : 'Network error'
+      );
     }
   };
 
@@ -110,13 +113,11 @@ export default function Wishlist() {
         <meta name="description" content="Your saved items" />
       </Head>
       
-      {/* Navbar and Footer components should typically wrap the main content or be siblings */}
-      <Navbar /> 
+      <Navbar />
       
       <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="mb-8">
           <h2 className="text-2xl font-semibold">My Wishlist</h2>
-          {/* Display loading status or item count */}
           {loading ? (
             <p className="text-gray-600">Loading your wishlist...</p>
           ) : (
@@ -124,14 +125,18 @@ export default function Wishlist() {
           )}
         </div>
         
-        {/* Display error messages if any */}
-        {error && (
+        {fetchError && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
-            <p>{error}</p>
+            <p>{fetchError}</p>
           </div>
         )}
 
-        {/* Conditional rendering based on loading state and wishlist content */}
+        {operationError && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 rounded-md">
+            <p>{operationError}</p>
+          </div>
+        )}
+
         {loading ? (
           <div className="text-center py-12">
             <p className="text-lg">Fetching your wishlist...</p>
@@ -150,18 +155,14 @@ export default function Wishlist() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {wishlistItems.map(wishlistItem => (
               <WishlistItem
-                key={wishlistItem.product._id} // Use the actual product's _id from the backend response
+                key={wishlistItem.product._id}
                 item={{
-                  id: wishlistItem.product._id, // Map backend _id to frontend id
+                  id: wishlistItem.product._id,
                   name: wishlistItem.product.name,
                   price: wishlistItem.product.price,
                   image: wishlistItem.product.image,
-                  // If your Product model includes a 'variant' field, you'd add it here:
-                  // variant: wishlistItem.product.variant, 
                 }}
-                // Pass the full product object to moveToCart as it needs _id for the cart API
-                onMoveToCart={() => moveToCart(wishlistItem.product)} 
-                // Pass the product _id to removeItem
+                onMoveToCart={() => moveToCart(wishlistItem.product)}
                 onRemove={() => removeItem(wishlistItem.product._id)}
               />
             ))}
@@ -169,7 +170,7 @@ export default function Wishlist() {
         )}
       </main>
       
-      <Footer /> {/* Footer outside main */}
+      <Footer />
     </>
   );
 }

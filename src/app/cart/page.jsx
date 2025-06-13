@@ -17,9 +17,9 @@ export default function Cart() {
   const dispatch = useDispatch();
 
   // Get state from Redux store
-  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const isAuthenticated = useSelector;
   const authLoading = useSelector(selectAuthLoading);
-  const authUser = useSelector(selectAuthUser);
+  // const authUser = useSelector(selectAuthUser);
   const cart = useSelector((state) => state.cart.items);
   const loadingCart = useSelector((state) => state.cart.loading);
   const cartError = useSelector((state) => state.cart.error);
