@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiEdit, FiSave } from 'react-icons/fi';
 import axios from 'axios';
-import { setAuthUser } from '@/lib/features/auth/authSlice';
+import { resetAuth } from '@/lib/features/auth/authSlice';
 
 const AccountDetailsSection = ({ authUser, dispatch, BACKEND_URL, displayLocalMessage }) => {
   // console.log('Rendering AccountDetailsSection with authUser:', authUser); // Keep for debugging if needed
@@ -60,7 +60,7 @@ const AccountDetailsSection = ({ authUser, dispatch, BACKEND_URL, displayLocalMe
       // Update Redux state with the new user details received from the backend response.
       // This is crucial to keep the global Redux state consistent and
       // will trigger the useEffect above to re-sync accountFormData.
-      dispatch(setAuthUser(response.data.user));
+      dispatch(resetAuth(response.data.user));
 
       setIsAccountEditing(false);
       displayLocalMessage('success', 'Account details updated successfully!');

@@ -9,7 +9,7 @@ import Footer from '@/components/Layout/Footer';
 import { FiEdit, FiPlus, FiChevronRight, FiClock, FiCheckCircle, FiTruck, FiShoppingCart, FiUser, FiMapPin, FiPackage, FiX, FiSave, FiTrash2 } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '@/lib/features/auth/cartSlice';
-import { setAuthUser } from '@/lib/features/auth/authSlice';
+import { resetAuth } from '@/lib/features/auth/authSlice';
 import axios from 'axios';
 import { selectIsAuthenticated, selectAuthUser, selectAuthLoading } from '@/lib/features/auth/selector';
 
@@ -225,7 +225,7 @@ export default function UserAccount() {
                 <AccountDetailsSection
                   authUser={authUser}
                   dispatch={dispatch}
-                  setAuthUser={setAuthUser}
+                  resetAuth={resetAuth}
                   BACKEND_URL={BACKEND_URL}
                   displayLocalMessage={displayLocalMessage}
                 />

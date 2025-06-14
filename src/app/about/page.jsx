@@ -19,13 +19,11 @@ export default function AboutPage() {
         If it's fixed, uncomment the next line and add a 'pt-20' (or appropriate value)
         to your <main> element, depending on your Navbar's height.
       */}
+<Navbar  />
 
       <main className="min-h-screen flex z-300 flex-col"> {/* Removed min-w-screen and overflow-x-hidden */}
         {/* Hero Section */}
-        <div className='absolute opacity-100 z-100 inset-0'>
-<Navbar textColor="text-white" />
 
-        </div>
         {/* Hero Section */}
         <section className="relative bg-black text-white py-20">
           <div className="absolute inset-0 opacity-50">
@@ -47,7 +45,7 @@ export default function AboutPage() {
         {/* Mission Section */}
         <section className="py-18 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center gap-12">
-            <div className="md:w-1/2">
+            <div className="md:w-1/2 hidden md:block">
               <Image
                 src="/images/about-mission.jpg"
                 alt="Our mission"

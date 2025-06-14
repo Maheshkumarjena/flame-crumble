@@ -14,11 +14,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
-  
+
   // Get state from Redux store using useSelector
-  // 'loading' and 'error' are directly from the auth slice state.
-  // 'isAuthenticated' can be used for conditional redirects if needed, but not directly for UI on this page.
-  const { loading, error: authError } = useSelector((state) => state.auth);
+  // Access the 'error' object from the auth slice, and destructure its 'message' property
+  const { loading, error: authErrorObject } = useSelector((state) => state.auth);
   const dispatch = useDispatch(); // Get the dispatch function to send actions to the store
 
   const handleSubmit = async (e) => {
@@ -40,8 +39,12 @@ export default function LoginPage() {
     }
   };
 
+  // Access the message from the authErrorObject for display and checks
+  const displayErrorMessage = authErrorObject?.message;
+
   // Check if the current error message from Redux state is specifically about unverified email
-  const isUnverifiedEmailError = authError?.includes('Your email is not verified') || authError?.includes('Please verify your email');
+  // Now we check displayErrorMessage (which is the string)
+  const isUnverifiedEmailError = displayErrorMessage?.includes('Your email is not verified') || displayErrorMessage?.includes('Please verify your email');
 
   return (
     <>
@@ -49,24 +52,25 @@ export default function LoginPage() {
         <title>Login | flame&crumble</title>
         <meta name="description" content="Login to your account" />
       </Head>
-      
+
       <Navbar />
-      
+
       <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md overflow-hidden">
           <div className="bg-black text-white p-6">
             <h1 className="text-2xl font-bold">Welcome Back</h1>
             <p className="text-gray-300">Login to your account</p>
           </div>
-          
+
           <div className="p-6">
             {/* Display error message from Redux state */}
-            {authError && (
+            {/* Use displayErrorMessage for rendering */}
+            {displayErrorMessage && (
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
-                <p>{authError}</p>
+                <p>{displayErrorMessage}</p>
                 {isUnverifiedEmailError && (
                   <div className="mt-2 text-center">
-                    <Link 
+                    <Link
                       href={`/auth/verify-email?email=${encodeURIComponent(email)}`}
                       className="font-medium text-[#E30B5D] hover:text-[#c5094f] underline"
                     >
@@ -76,7 +80,7 @@ export default function LoginPage() {
                 )}
               </div>
             )}
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -96,7 +100,7 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
@@ -115,7 +119,7 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <input
@@ -128,14 +132,14 @@ export default function LoginPage() {
                     Remember me
                   </label>
                 </div>
-                
+
                 <div className="text-sm">
                   <Link href="/auth/forgot-password" className="font-medium text-[#E30B5D] hover:text-[#c5094f]">
                     Forgot password?
                   </Link>
                 </div>
               </div>
-              
+
               <div>
                 <Button
                   type="submit"
@@ -152,7 +156,7 @@ export default function LoginPage() {
                 </Button>
               </div>
             </form>
-            
+
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -164,7 +168,7 @@ export default function LoginPage() {
                   </span>
                 </div>
               </div>
-              
+
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <div>
                   <Button
@@ -177,7 +181,7 @@ export default function LoginPage() {
                     GitHub
                   </Button>
                 </div>
-                
+
                 <div>
                   <Button
                     variant="secondary"
@@ -192,7 +196,7 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-gray-50 px-6 py-4">
             <p className="text-center text-sm text-gray-600">
               Don't have an account?{' '}
@@ -203,7 +207,7 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
-      
+
       <Footer />
     </>
   );
