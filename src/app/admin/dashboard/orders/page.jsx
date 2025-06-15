@@ -23,11 +23,11 @@ const OrderManagementPage = () => { // Renamed to denote it's a page component
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/admin/orders`, {
+      const response = await axios.get(`${BACKEND_URL}/api/orders`, {
         params: { status: filterStatus === 'all' ? undefined : filterStatus },
         withCredentials: true,
       });
-      setOrders(response.data.orders);
+      setOrders(response.data.orders || []);
     } catch (err) {
       console.error('Failed to fetch orders:', err);
       setError(err.response?.data?.error || 'Failed to load orders.');

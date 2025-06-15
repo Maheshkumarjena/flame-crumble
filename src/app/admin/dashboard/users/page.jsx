@@ -1,14 +1,16 @@
-// components/Admin/UserManagement.jsx - SIMPLIFIED
+// components/Admin/UserManagement.jsx
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-// Removed AdminSidebar import
+import axios from 'axios'; // We'll keep axios here for direct API calls
+import { useSelector } from 'react-redux'; // Still need useSelector for current user/admin status
+
 import AdminSidebar from '@/components/Dashboard/ui/AdminSidebar';
-import { FiUserCheck, FiUserX, FiMail, FiPhone, FiTrash, FiAlertCircle, FiCheckCircle, FiX } from 'react-icons/fi';
+import { FiUserCheck, FiUserX, FiTrash, FiAlertCircle, FiCheckCircle, FiX } from 'react-icons/fi';
+import { current } from '@reduxjs/toolkit';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
-// A simple message box component
+// A simple message box component (no changes needed)
 const MessageBox = ({ type, message, onClose }) => {
   if (!message) return null;
 
@@ -46,7 +48,7 @@ const MessageBox = ({ type, message, onClose }) => {
   );
 };
 
-// Custom Confirmation Modal component
+// Custom Confirmation Modal component (no changes needed)
 const ConfirmationModal = ({ isOpen, message, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel' }) => {
   if (!isOpen) return null;
 
@@ -75,26 +77,31 @@ const ConfirmationModal = ({ isOpen, message, onConfirm, onCancel, confirmText =
 };
 
 const UserManagement = () => {
-  // Removed mobileSidebarOpen state
-
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Component-local states for user data and management
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
+  // Confirmation modal states
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [confirmModalMessage, setConfirmModalMessage] = useState('');
-  const [actionToConfirm, setActionToConfirm] = useState(null);
+  const [actionToConfirm, setActionToConfirm] = useState(null); // Stores the function to call on confirm
 
-  const [isRoleConfirmModalOpen, setIsRoleConfirmModalOpen] = useState(false);
-  const [userToUpdateRole, setUserToUpdateRole] = useState(null);
-  const [newRoleForUser, setNewRoleForUser] = useState('');
+  // Get the current logged-in user from Redux to prevent self-actions
+  const currentUser = useSelector((state) => state.auth.user);
 
+  console.log(
+    "current user", currentUser
+  )
+
+  // --- Data Fetching ---
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setSuccessMessage(null);
+    setSuccessMessage(null); // Clear messages on new fetch
     try {
       const response = await axios.get(`${BACKEND_URL}/api/admin/users`, {
         withCredentials: true,
@@ -106,42 +113,55 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // No dependencies means this function is stable
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    fetchUsers(); // Initial fetch when component mounts
+  }, [fetchUsers]); // Re-run if fetchUsers changes (though it's useCallback'd to be stable)
 
+  // --- User Role Update Logic ---
   const handleUpdateUserRole = (userId, newRole) => {
-    setUserToUpdateRole(userId);
-    setNewRoleForUser(newRole);
+    // Prevent an admin from changing their own role
+    if (currentUser && currentUser._id === userId) {
+      setError("You cannot change your own role.");
+      return;
+    }
     setConfirmModalMessage(`Are you sure you want to change this user's role to "${newRole}"?`);
     setActionToConfirm(() => () => executeUpdateUserRole(userId, newRole));
-    setIsRoleConfirmModalOpen(true);
+    setIsConfirmModalOpen(true);
   };
 
   const executeUpdateUserRole = async (userId, newRole) => {
-    setIsRoleConfirmModalOpen(false);
+    console.log("users", users)
+    setIsConfirmModalOpen(false); // Close modal immediately
     setLoading(true);
     setError(null);
     setSuccessMessage(null);
     try {
-      await axios.patch(`${BACKEND_URL}/api/admin/users/${userId}/role`, { role: newRole }, {
+      await axios.patch(`${BACKEND_URL}/api/admin/users/${userId}/role`, { role: newRole, userId: userId }, {
         withCredentials: true,
+
       });
       setSuccessMessage(`User role updated to "${newRole}" successfully!`);
-      fetchUsers();
+      fetchUsers(); // Re-fetch users to update the UI with the new role
     } catch (err) {
       console.error('Failed to update user role:', err);
       setError(err.response?.data?.error || 'Failed to update user role.');
     } finally {
       setLoading(false);
-      setUserToUpdateRole(null);
-      setNewRoleForUser('');
     }
   };
 
+  // --- User Deletion Logic ---
   const handleDeleteUser = (userId) => {
+    console.log("users", users)
+    
+
+    // Prevent an admin from deleting themselves
+    if (currentUser && currentUser._id === userId) {
+      setError("You cannot delete your own account.");
+      return;
+    }
     setConfirmModalMessage('Are you sure you want to delete this user? This action cannot be undone.');
     setActionToConfirm(() => () => executeDeleteUser(userId));
     setIsConfirmModalOpen(true);
@@ -153,29 +173,37 @@ const UserManagement = () => {
     setError(null);
     setSuccessMessage(null);
     try {
+      // CORRECT AXIOS.DELETE SYNTAX:
+      // Argument 1: URL
+      // Argument 2: Config object (where 'data' and 'withCredentials' reside)
       await axios.delete(`${BACKEND_URL}/api/admin/users/${userId}`, {
         withCredentials: true,
-      });
+        // Only include 'data' if your backend specifically reads req.body for DELETE.
+        // If your backend relies solely on req.params.id (which is standard),
+        // you don't even need the 'data' property here.
+      }, {      data: currentUser, // This is where you put your data for the body
+});
       setSuccessMessage('User deleted successfully!');
       fetchUsers();
     } catch (err) {
       console.error('Failed to delete user:', err);
+      // Log the full error response for more details
+      console.error('Full error response:', err.response);
       setError(err.response?.data?.error || 'Failed to delete user.');
     } finally {
       setLoading(false);
     }
   };
 
+  // --- Modal Management ---
   const closeConfirmModals = () => {
     setIsConfirmModalOpen(false);
-    setIsRoleConfirmModalOpen(false);
     setConfirmModalMessage('');
     setActionToConfirm(null);
-    setUserToUpdateRole(null);
-    setNewRoleForUser('');
   };
 
-  if (loading && users.length === 0) {
+  // --- Loading State Render ---
+  if (loading && users.length === 0 && !error) { // Only show loading spinner if no users loaded yet and no initial error
     return (
       <div className="flex justify-center items-center h-full min-h-[400px]">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#E30B5D]"></div>
@@ -184,17 +212,16 @@ const UserManagement = () => {
     );
   }
 
+  // --- Main Component Render ---
   return (
-    // Removed the flex container and AdminSidebar rendering here
-    // This component will now be rendered as a child within AdminDashboardLayout
     <div className="bg-white rounded-lg shadow-md p-6 lg:p-8">
-              <AdminSidebar mobileSidebarOpen={mobileSidebarOpen} setMobileSidebarOpen={setMobileSidebarOpen} />
+      <AdminSidebar mobileSidebarOpen={mobileSidebarOpen} setMobileSidebarOpen={setMobileSidebarOpen} />
 
-<div className='flex flex-row'>
+      <div className='flex flex-row'>
+        <h2 className="text-3xl m-auto font-bold text-gray-800 mb-6">Users Management</h2>
+      </div>
 
-            <h2 className="text-3xl m-auto  font-bold  text-gray-800 mb-6">Users Management</h2>
-            </div>
-
+      {/* Message Boxes for errors and success */}
       <MessageBox type="error" message={error} onClose={() => setError(null)} />
       <MessageBox type="success" message={successMessage} onClose={() => setSuccessMessage(null)} />
 
@@ -210,70 +237,75 @@ const UserManagement = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user._id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize
-                    ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-                    {user.role}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {user.isVerified ? (
-                    <FiUserCheck className="text-green-500" size={20} title="Email Verified" />
-                  ) : (
-                    <FiUserX className="text-red-500" size={20} title="Email Not Verified" />
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <select
-                    value={user.role}
-                    onChange={(e) => handleUpdateUserRole(user._id, e.target.value)}
-                    className="px-2 py-1 border border-gray-300 rounded-md text-sm bg-white mr-2 focus:ring-[#E30B5D] focus:border-[#E30B5D]"
-                    aria-label="Change user role"
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                  <button
-                    onClick={() => handleDeleteUser(user._id)}
-                    className="text-red-600 hover:text-red-900 ml-2 p-1 rounded hover:bg-red-50 transition-colors"
-                    aria-label="Delete user"
-                  >
-                    <FiTrash size={18} />
-                  </button>
+            {users.length > 0 ? (
+              users.map((user) => (
+                <tr key={user._id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize
+                      ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.isVerified ? (
+                      <FiUserCheck className="text-green-500" size={20} title="Email Verified" />
+                    ) : (
+                      <FiUserX className="text-red-500" size={20} title="Email Not Verified" />
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <select
+                      id={user._id}
+                      value={user.role}
+                      onChange={(e) => handleUpdateUserRole(user._id, e.target.value)}
+                      className="px-2 py-1 border border-gray-300 rounded-md text-sm bg-white mr-2 focus:ring-[#E30B5D] focus:border-[#E30B5D]"
+                      aria-label="Change user role"
+                      // Disable changing own role for the currently logged-in admin
+                      disabled={currentUser && currentUser._id === user._id}
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <button
+                      onClick={() => handleDeleteUser(user._id)}
+                      className={`ml-2 p-1 rounded transition-colors ${currentUser && currentUser._id === user._id
+                          ? 'text-gray-400 cursor-not-allowed' // Grey out and disable if it's the current admin
+                          : 'text-red-600 hover:text-red-900 hover:bg-red-50'
+                        }`}
+                      aria-label="Delete user"
+                      // Disable deleting own account for the currently logged-in admin
+                      disabled={currentUser && currentUser._id === user._id}
+                    >
+                      <FiTrash size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="text-center py-8 text-gray-500">
+                  {loading ? "Loading users..." : error ? "Error loading users." : "No users found."}
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
-        {users.length === 0 && !loading && !error && (
-          <p className="text-center py-8 text-gray-500">No users found.</p>
-        )}
       </div>
 
+      {/* Single Confirmation Modal */}
       <ConfirmationModal
         isOpen={isConfirmModalOpen}
         message={confirmModalMessage}
         onConfirm={() => {
           if (actionToConfirm) actionToConfirm();
-          closeConfirmModals();
+          // The modal is closed by the execute functions themselves to ensure
+          // it closes after the async action is dispatched.
+          // closeConfirmModals(); // This line is not needed here if execute functions close it
         }}
         onCancel={closeConfirmModals}
-        confirmText="Delete"
-      />
-
-      <ConfirmationModal
-        isOpen={isRoleConfirmModalOpen}
-        message={confirmModalMessage}
-        onConfirm={() => {
-          if (actionToConfirm) actionToConfirm();
-          closeConfirmModals();
-        }}
-        onCancel={closeConfirmModals}
-        confirmText="Update Role"
+        confirmText={actionToConfirm && actionToConfirm.name.includes('Delete') ? 'Delete' : 'Confirm'}
       />
     </div>
   );
