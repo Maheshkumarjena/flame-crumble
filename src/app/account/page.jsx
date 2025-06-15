@@ -34,34 +34,30 @@ export default function UserAccount() {
   const [addresses, setAddresses] = useState([]);
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Track auth status
 
   const router = useRouter();
   const dispatch = useDispatch();
 
-  const authUser = useSelector(selectAuthUser);
-  // console.log('authUser at parent account apge ----------------------------------------------:', authUser); // Debugging line to check authUser state
+  const authUser = useSelector(selectAuthUser); // authUser will be null if not authenticated
 
   const [localMessage, setLocalMessage] = useState({ type: '', text: '' });
 
   // Function to display local messages for user feedback
-  const displayLocalMessage = (type, text) => {
+  const displayLocalMessage = useCallback((type, text) => {
     setLocalMessage({ type, text });
     setTimeout(() => setLocalMessage({ type: '', text: '' }), 3000);
-  };
+  }, []); // useCallback to memoize for useEffect dependencies
 
-  // Helper to check authentication status (similar to checkAuthStatus in authUtils.js)
-  // This function would typically make an API call to validate the session.
+  // Helper to check authentication status
   const checkSessionAuth = useCallback(async () => {
     try {
-      // This endpoint should return 200 if authenticated, 401/403 otherwise.
       const response = await axios.get(`${BACKEND_URL}/api/auth/status`, {
         withCredentials: true,
       });
-      // If the response is successful, it means the user is logged in
       return response.data.loggedIn;
     } catch (err) {
       console.error("Session check failed:", err);
-      // If session check fails (e.g., token expired, network error), consider user as not logged in
       return false;
     }
   }, []);
@@ -76,7 +72,7 @@ export default function UserAccount() {
       setAddresses(response.data.addresses);
     } catch (err) {
       console.error('Error fetching addresses:', err);
-      setError(err.response?.data?.error || 'Failed to load addresses.');
+      // Do not set global error here, let the main useEffect handle it if auth fails
       throw err; // Re-throw to propagate error for Promise.all
     }
   }, []);
@@ -91,7 +87,7 @@ export default function UserAccount() {
       setOrders(response.data);
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setError(err.response?.data?.error || 'Failed to load orders.');
+      // Do not set global error here, let the main useEffect handle it if auth fails
       throw err; // Re-throw to propagate error for Promise.all
     }
   }, []);
@@ -108,8 +104,10 @@ export default function UserAccount() {
   useEffect(() => {
     const initializePage = async () => {
       setPageLoading(true); // Start loading for the entire page
+      setError(null); // Clear previous errors
 
       const isLoggedIn = await checkSessionAuth(); // Perform the explicit session check
+      setIsAuthenticated(isLoggedIn); // Set local isAuthenticated state
 
       if (isLoggedIn) {
         try {
@@ -118,23 +116,20 @@ export default function UserAccount() {
             fetchOrders()
           ]);
         } catch (err) {
-          // Error in fetching addresses/orders, set error and keep page loading for error display
+          // This catch block handles errors specifically from fetchAddresses/fetchOrders
           console.error("Error fetching user data after successful auth:", err);
           setError("Failed to load user data. Please try again.");
-        } finally {
-          setPageLoading(false); // Stop loading once all data (or error) is handled
         }
-      } else {
-        // Not logged in, redirect to login page
-        router.push(`/auth/login?returnUrl=${encodeURIComponent('/account')}`);
-        setPageLoading(false); // Stop loading, as we are redirecting
       }
+      setPageLoading(false); // Stop loading once auth check and data fetch (or lack thereof) are complete
     };
 
     initializePage();
-  }, [checkSessionAuth, fetchAddresses, fetchOrders, router]); // Dependencies updated
+  }, [checkSessionAuth, fetchAddresses, fetchOrders]); // Dependencies updated
 
-  // Show loading spinner if the page is in its overall loading state
+  // --- Conditional Rendering Logic ---
+
+  // Show loading spinner while the initial page data (including auth) is being loaded
   if (pageLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -143,13 +138,38 @@ export default function UserAccount() {
     );
   }
 
-  // If pageLoading is false and authUser is null, it means the checkSessionAuth failed
-  // and router.push was called. So, this component won't render its main content.
-  // This is a safeguard, as the redirect should have already taken effect.
-  if (!authUser) {
-    return null; // Should ideally not be reached if redirect works correctly
+  // If pageLoading is false and isAuthenticated is false, display the login prompt
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Head>
+          <title>My Account | flame&crumble</title>
+          <meta name="description" content="Your account dashboard" />
+        </Head>
+
+        <Navbar />
+
+        <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-center">
+          <div className="text-center bg-white p-8 rounded-lg shadow-md max-w-md">
+            <h2 className="text-2xl font-bold mb-4">Login to access Your Account</h2>
+            <p className="text-gray-700 mb-6">
+              Please log in to view and manage your account details, orders, and addresses.
+            </p>
+            <Link
+              href={`/auth/login?returnUrl=${encodeURIComponent('/account')}`}
+              className="inline-block bg-[#E30B5D] hover:bg-[#c5094f] text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+            >
+              Go to Login Page
+            </Link>
+          </div>
+        </main>
+
+        <Footer />
+      </>
+    );
   }
 
+  // Default rendering for authenticated users
   return (
     <>
       <Head>
@@ -163,7 +183,7 @@ export default function UserAccount() {
         <div className="max-w-7xl mx-auto">
           <div className="mb-10 text-center lg:text-left">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">My Account</h1>
-            <p className="text-lg text-gray-600 mt-2">Welcome back, <span className="font-semibold text-[#E30B5D]">{authUser.name?.split(' ')[0] || 'User'}</span>!</p>
+            <p className="text-lg text-gray-600 mt-2">Welcome back, <span className="font-semibold text-[#E30B5D]">{authUser?.name?.split(' ')[0] || 'User'}</span>!</p>
           </div>
 
           {/* Local message display */}

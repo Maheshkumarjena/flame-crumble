@@ -15,6 +15,8 @@ export default function Wishlist() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
   const [operationError, setOperationError] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // New state to track authentication status
+  const [initialAuthCheckDone, setInitialAuthCheckDone] = useState(false); // New state for initial check
   const router = useRouter();
 
   // Memoized fetch function with proper error handling
@@ -28,10 +30,7 @@ export default function Wishlist() {
       setWishlistItems(response.data.items);
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        if (err.response?.status === 401 || err.response?.status === 403) {
-          router.push(`/auth/login?returnUrl=${encodeURIComponent('/wishlist')}`);
-          return; // Important to return after redirect
-        }
+        // We no longer redirect here; the main useEffect handles unauthenticated state
         setFetchError(err.response?.data?.error || 'Failed to load wishlist');
       } else {
         setFetchError('Network error. Please try again.');
@@ -39,34 +38,52 @@ export default function Wishlist() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, []); // No need for router in dependencies here as redirect is handled elsewhere
 
+  // Effect to check auth status and then fetch wishlist
   useEffect(() => {
     const controller = new AbortController();
-    
-    const loadData = async () => {
+    const signal = controller.signal;
+
+    const checkAuthAndFetchWishlist = async () => {
+      setLoading(true); // Indicate loading while checking auth and fetching
+      setFetchError('');
+
       try {
-        // Check auth and fetch in one flow
-        await axios.get(`${BACKEND_URL}/api/auth/status`, {
+        const authResponse = await axios.get(`${BACKEND_URL}/api/auth/status`, {
           withCredentials: true,
-          signal: controller.signal
+          signal: signal,
         });
-        await fetchWishlist();
+        // If auth status check is successful, the user is authenticated
+        setIsAuthenticated(true);
+        await fetchWishlist(); // Fetch wishlist only if authenticated
       } catch (err) {
         if (axios.isAxiosError(err)) {
           if (err.response?.status === 401 || err.response?.status === 403) {
-            router.push(`/auth/login?returnUrl=${encodeURIComponent('/wishlist')}`);
-          } else if (!err.message.includes('canceled')) {
-            setFetchError(err.response?.data?.error || 'Authentication check failed');
+            // User is not authenticated. Do NOT redirect here.
+            setIsAuthenticated(false);
+            setWishlistItems([]); // Clear any stale wishlist data
+            setLoading(false); // Stop loading, as we're now displaying the login prompt
+          } else if (!signal.aborted) {
+            // Handle other errors that are not due to abortion
+            setFetchError(err.response?.data?.error || 'Failed to check authentication status or fetch wishlist.');
+            setIsAuthenticated(false); // Assume not authenticated on other errors as well
+            setLoading(false);
           }
+        } else if (!signal.aborted) {
+          setFetchError('Network error. Please try again.');
+          setIsAuthenticated(false);
+          setLoading(false);
         }
+      } finally {
+        setInitialAuthCheckDone(true); // Mark the initial check as complete
       }
     };
 
-    loadData();
+    checkAuthAndFetchWishlist();
 
-    return () => controller.abort();
-  }, [fetchWishlist, router]);
+    return () => controller.abort(); // Cleanup on unmount
+  }, [fetchWishlist]); // fetchWishlist is a dependency, but it's useCallback'd without router
 
   const removeItem = async (productId) => {
     setOperationError('');
@@ -74,15 +91,13 @@ export default function Wishlist() {
       await axios.delete(`${BACKEND_URL}/api/wishlist/${productId}`, {
         withCredentials: true,
       });
-      // Optimistic update instead of refetching
       setWishlistItems(prev => prev.filter(item => item.product._id !== productId));
     } catch (err) {
       setOperationError(
-        axios.isAxiosError(err) 
+        axios.isAxiosError(err)
           ? err.response?.data?.error || 'Failed to remove item'
           : 'Network error'
       );
-      // Revert UI if needed by calling fetchWishlist()
     }
   };
 
@@ -95,7 +110,6 @@ export default function Wishlist() {
       }, {
         withCredentials: true,
       });
-      // Optimistic update for both operations
       setWishlistItems(prev => prev.filter(item => item.product._id !== product._id));
     } catch (err) {
       setOperationError(
@@ -106,25 +120,64 @@ export default function Wishlist() {
     }
   };
 
+  // --- Conditional rendering logic ---
+
+  // Show loading spinner initially while authentication and data fetch is in progress
+  if (!initialAuthCheckDone || (loading && isAuthenticated)) {
+    return (
+      <main className="min-h-screen flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E30B5D]"></div>
+      </main>
+    );
+  }
+
+  // If initial auth check is done and user is NOT authenticated
+  if (initialAuthCheckDone && !isAuthenticated) {
+    return (
+      <>
+        <Head>
+          <title>My Wishlist | flame&crumble</title>
+          <meta name="description" content="Your saved items" />
+        </Head>
+
+        <Navbar />
+
+        <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-center">
+          <div className="text-center bg-white p-8 rounded-lg shadow-md max-w-md">
+            <h2 className="text-2xl font-bold mb-4">Login to Access Your Wishlist</h2>
+            <p className="text-gray-700 mb-6">
+              Please log in to view and manage your saved items. Your wishlist is accessible across all your devices when you're logged in!
+            </p>
+            <Link
+              href={`/auth/login?returnUrl=${encodeURIComponent('/wishlist')}`}
+              className="inline-block bg-[#E30B5D] hover:bg-[#c5094f] text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+            >
+              Go to Login Page
+            </Link>
+          </div>
+        </main>
+
+        <Footer />
+      </>
+    );
+  }
+
+  // Default rendering for authenticated users
   return (
     <>
       <Head>
         <title>My Wishlist | flame&crumble</title>
         <meta name="description" content="Your saved items" />
       </Head>
-      
+
       <Navbar />
-      
+
       <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="mb-8">
           <h2 className="text-2xl font-semibold">My Wishlist</h2>
-          {loading ? (
-            <p className="text-gray-600">Loading your wishlist...</p>
-          ) : (
-            <p className="text-gray-600">{wishlistItems.length} items saved</p>
-          )}
+          <p className="text-gray-600">{wishlistItems.length} items saved</p>
         </div>
-        
+
         {fetchError && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
             <p>{fetchError}</p>
@@ -137,15 +190,11 @@ export default function Wishlist() {
           </div>
         )}
 
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-lg">Fetching your wishlist...</p>
-          </div>
-        ) : wishlistItems.length === 0 ? (
+        {wishlistItems.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-lg mb-4">Your wishlist is empty</p>
-            <Link 
-              href="/shop" 
+            <Link
+              href="/shop"
               className="inline-block bg-[#E30B5D] hover:bg-[#c5094f] text-white px-6 py-2 rounded font-medium transition-colors"
             >
               Start Shopping
@@ -169,7 +218,7 @@ export default function Wishlist() {
           </div>
         )}
       </main>
-      
+
       <Footer />
     </>
   );

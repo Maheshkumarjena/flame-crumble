@@ -9,7 +9,7 @@ import CartSummary from '@/components/Cart/CartSummary';
 import CartItem from '@/components/Cart/CartItem';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCart, updateCartItemQuantity, removeCartItem } from '@/lib/features/auth/cartSlice';
-import { selectIsAuthenticated, selectAuthLoading, selectAuthError } from '@/lib/features/auth/authSlice'; // Import selectAuthError here
+import { selectIsAuthenticated, selectAuthLoading, selectAuthError } from '@/lib/features/auth/authSlice';
 import { checkAuthStatus } from '@/lib/features/auth/authSlice';
 
 export default function Cart() {
@@ -17,16 +17,13 @@ export default function Cart() {
   const dispatch = useDispatch();
 
   // Get state from Redux store
-  const isAuthenticated = useSelector(selectIsAuthenticated); // FIX: Call useSelector with the selector
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const authLoading = useSelector(selectAuthLoading);
-  // const authUser = useSelector(selectAuthUser); // This selector is not used in the component, can be removed if not needed.
   const cart = useSelector((state) => state.cart.items);
   const loadingCart = useSelector((state) => state.cart.loading);
-  // Access the error object from the cart slice and extract its message
   const cartErrorObject = useSelector((state) => state.cart.error);
-  const cartErrorMessage = cartErrorObject?.message; // Extract the message
+  const cartErrorMessage = cartErrorObject?.message;
 
-  // Access the error object from the auth slice and extract its message for a more robust check
   const authErrorObject = useSelector(selectAuthError);
   const authErrorMessage = authErrorObject?.message;
 
@@ -39,21 +36,14 @@ export default function Cart() {
     dispatch(checkAuthStatus());
   }, [dispatch]);
 
-  // Effect to handle auth state changes and redirection
+  // Effect to mark initial auth check as done once loading is complete
   useEffect(() => {
-    // Only proceed if authLoading is false and initial check hasn't been marked done yet.
-    // This ensures we react to the *completion* of the auth check.
     if (!authLoading && !initialAuthCheckDone) {
-      setInitialAuthCheckDone(true); // Mark initial check as done
-
-      if (!isAuthenticated) {
-        // If not authenticated after the check, redirect
-        router.push(`/auth/login?returnUrl=${encodeURIComponent('/cart')}`);
-      }
+      setInitialAuthCheckDone(true);
     }
-  }, [isAuthenticated, authLoading, router, initialAuthCheckDone]); // Added initialAuthCheckDone to dependency array
+  }, [authLoading, initialAuthCheckDone]);
 
-  // Effect to fetch cart only after auth is confirmed AND initialAuthCheckDone is true
+  // Effect to fetch cart only after auth is confirmed and initialAuthCheckDone is true
   useEffect(() => {
     if (isAuthenticated && initialAuthCheckDone) {
       dispatch(fetchCart());
@@ -72,7 +62,6 @@ export default function Cart() {
       setLocalCartSuccessMessage('Cart item quantity updated!');
       setTimeout(() => setLocalCartSuccessMessage(''), 3000);
     } else {
-      // Access the error message from the payload, which is expected to be an object from handleAuthError
       setLocalCartErrorMessage(resultAction.payload?.message || 'Failed to update cart item.');
       setTimeout(() => setLocalCartErrorMessage(''), 5000);
     }
@@ -89,7 +78,6 @@ export default function Cart() {
       setLocalCartSuccessMessage('Item removed from cart!');
       setTimeout(() => setLocalCartSuccessMessage(''), 3000);
     } else {
-      // Access the error message from the payload
       setLocalCartErrorMessage(resultAction.payload?.message || 'Failed to remove item from cart.');
       setTimeout(() => setLocalCartErrorMessage(''), 5000);
     }
@@ -103,8 +91,7 @@ export default function Cart() {
   const shipping = subtotal > 0 ? 5.99 : 0;
   const total = subtotal + shipping;
 
-  // Show loading spinner while checking auth or initial cart load
-  // Changed logic to ensure loading spinner only shows when auth is *truly* being checked initially
+  // Show loading spinner while checking auth initially
   if (!initialAuthCheckDone && authLoading) {
     return (
       <main className="min-h-screen flex justify-center items-center">
@@ -113,15 +100,42 @@ export default function Cart() {
     );
   }
 
-  // If initial auth check is done and user is not authenticated, redirect has already been triggered.
-  // We can return null here to avoid rendering the cart page content momentarily.
+  // --- Start of new logic for unauthenticated state ---
   if (initialAuthCheckDone && !isAuthenticated) {
-    return null;
+    return (
+      <>
+        <Head>
+          <title>Your Cart | flame&crumble</title>
+          <meta name="description" content="Your shopping cart" />
+        </Head>
+
+        <Navbar />
+
+        <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-center">
+          <div className="text-center bg-white p-8 rounded-lg shadow-md max-w-md">
+            <h2 className="text-2xl font-bold mb-4">Login to access Your Shopping Cart</h2>
+            <p className="text-gray-700 mb-6">
+              Please log in to view and manage items in your cart. Your cart is saved across devices when you're logged in!
+            </p>
+            <Link
+              href={`/auth/login?returnUrl=${encodeURIComponent('/cart')}`}
+              className="inline-block bg-[#E30B5D] hover:bg-[#c5094f] text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+            >
+              Go to Login Page
+            </Link>
+          </div>
+        </main>
+
+        <Footer />
+      </>
+    );
   }
+  // --- End of new logic for unauthenticated state ---
+
 
   // If authenticated but cart is still loading and empty, show spinner
   if (isAuthenticated && loadingCart && cart.length === 0) {
-     return (
+    return (
       <main className="min-h-screen flex justify-center items-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E30B5D]"></div>
       </main>
@@ -153,16 +167,16 @@ export default function Cart() {
         )}
         {/* Display cart error from Redux state */}
         {cartErrorMessage && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
-                <p>{cartErrorMessage}</p>
-            </div>
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
+            <p>{cartErrorMessage}</p>
+          </div>
         )}
         {/* Display auth error from Redux state, if any, that might prevent cart from loading */}
         {authErrorMessage && (
-             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
-                 <p>Authentication Error: {authErrorMessage}</p>
-             </div>
-         )}
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
+            <p>Authentication Error: {authErrorMessage}</p>
+          </div>
+        )}
 
 
         <div className="flex flex-col lg:flex-row gap-12">
