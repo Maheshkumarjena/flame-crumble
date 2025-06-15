@@ -2,6 +2,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import AdminSidebar from '@/components/Dashboard/ui/AdminSidebar';
 // Removed redundant imports like Image from 'next/image' and FiIcons as they are handled by SVG/local components.
 
 
@@ -169,6 +170,8 @@ const ProductManagement = () => {
     const [imageFile, setImageFile] = useState(null); // For new image upload file
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [productToDeleteId, setProductToDeleteId] = useState(null);
+      const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false); // State for sidebar visibility
+
 
     // Memoized function for product image URL generation
     const getProductImageUrl = useCallback((imagePath) => {
@@ -395,7 +398,12 @@ const ProductManagement = () => {
 
     return (
         <div className="p-8 bg-white rounded-lg shadow-md font-sans">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">Product Management</h2>
+                  <AdminSidebar mobileSidebarOpen={mobileSidebarOpen} setMobileSidebarOpen={setMobileSidebarOpen} />
+
+            <div className='flex flex-row'>
+
+            <h2 className="text-3xl m-auto  font-bold  text-gray-800 mb-6">Product Management</h2>
+            </div>
 
             <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-semibold text-gray-700">All Products</h3>
