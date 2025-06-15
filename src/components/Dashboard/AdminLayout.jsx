@@ -6,9 +6,6 @@ import { usePathname, useRouter } from 'next/navigation';
 // import { FiMenu } from 'react-icons/fi';
 
 import DashboardOverview from './DashboardOverview';
-import ProductManagement from './ProductManagement';
-import OrderManagement from './OrderManagement';
-import UserManagement from './UserManagement';
 import AdminSidebar from './ui/AdminSidebar';
 
 const AdminLayout = () => {
@@ -49,9 +46,7 @@ const AdminLayout = () => {
   const renderActiveSection = useCallback(() => {
     switch (activeSection) {
       case 'overview': return <DashboardOverview />;
-      case 'products': return <ProductManagement />;
-      case 'orders': return <OrderManagement />;
-      case 'users': return <UserManagement />;
+      
       default: return <DashboardOverview />;
     }
   }, [activeSection]);
@@ -77,9 +72,13 @@ const AdminLayout = () => {
         // Close mobile sidebar if clicking outside of it
         onClick={() => setMobileSidebarOpen(false)}
       >
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          <h3>hello</h3>
-          {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)} Dashboard
+        <h2 className="text-2xl font-bold  text-gray-800">
+          <div className='flex flex-row'>
+
+            <h2 className="text-3xl m-auto  font-bold  text-gray-800 mb-6">          {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)} 
+</h2>
+            </div>
+
         </h2>
         {renderActiveSection()}
       </main>

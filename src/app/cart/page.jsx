@@ -110,7 +110,6 @@ export default function Cart() {
         </Head>
 
         <Navbar />
-
         <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-center">
           <div className="text-center bg-white p-8 rounded-lg shadow-md max-w-md">
             <h2 className="text-2xl font-bold mb-4">Login to access Your Shopping Cart</h2>

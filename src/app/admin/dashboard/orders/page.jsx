@@ -86,10 +86,11 @@ const OrderManagementPage = () => { // Renamed to denote it's a page component
         className="flex-1 overflow-y-auto p-4 lg:p-8"
         onClick={() => setMobileSidebarOpen(false)} // Close sidebar on content click
       >
-        <div className='w-[100vw] flex flex-row'>
+        <div className='flex flex-row'>
 
-        <h2 className="text-3xl  justify-center align-center m-auto md:m-[0] font-bold text-gray-800 mb-6">Order Management</h2>
-        </div>
+            <h2 className="text-3xl m-auto  font-bold  text-gray-800 mb-6">Order Management</h2>
+            </div>
+
 
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-2xl font-semibold text-gray-700">All Orders</h3>

@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useCallback, useEffect } from 'react';
 import { FiShoppingCart, FiHeart, FiUser, FiMenu, FiX } from 'react-icons/fi';
+import { useSelector } from 'react-redux'; // Import useSelector for Redux
+import { selectIsAdmin } from '@/lib/features/auth/authSlice';
 
 // Helper function for scroll lock
 const togglePageScroll = (disable) => {
@@ -14,17 +16,23 @@ const togglePageScroll = (disable) => {
     }
 };
 
-const Navbar = ({ textColor = 'text-black' }) => { // Destructure textColor prop with a default value
+const Navbar = ({ textColor = 'text-black' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
+    const isAdmin = useSelector(selectIsAdmin); // Get isAdmin state from Redux
 
-    const navItems = [
+    const baseNavItems = [
         { name: 'Home', path: '/' },
         { name: 'Shop', path: '/shop' },
         { name: 'Corporate', path: '/corporate' },
         { name: 'About', path: '/about' },
         { name: 'Contact', path: '/contact' },
     ];
+
+    // Conditionally add Dashboard based on Redux isAdmin state
+    const navItems = isAdmin
+        ? [...baseNavItems, { name: 'Dashboard', path: '/admin/dashboard' }]
+        : baseNavItems;
 
     // Handle opening/closing the mobile menu and managing scroll
     const handleToggleMenu = useCallback(() => {
@@ -97,12 +105,17 @@ const Navbar = ({ textColor = 'text-black' }) => { // Destructure textColor prop
                 </div>
             </div>
 
-            {/* Mobile Navigation */}
+            {/* Mobile Navigation - MODIFIED FOR FULL SCREEN HEIGHT AND CONTENT PUSH */}
+            {/* Removed absolute positioning to allow it to push content */}
+            {/* Added h-screen when open to take full vertical space */}
             <div
-                className={`md:hidden  left-0 w-full backdrop-blur-[10px] z-200 flex flex-col items-center justify-center transition-all duration-300 ease-in-out ${
-                    isOpen ? 'h-screen opacity-100 translate-y-0' : 'h-0 opacity-0 -translate-y-full'
+                className={`md:hidden w-full backdrop-blur-[10px] z-200 flex flex-col items-center justify-center transition-all duration-300 ease-in-out ${
+                    // Changed from max-h-screen/max-h-0 to h-screen/h-0 directly for full screen height
+                    // The transition for height will work smoothly from h-0 to h-screen
+                    isOpen ? 'h-screen opacity-100' : 'h-0 opacity-0'
                 } overflow-hidden`}
             >
+                {/* Only render content if isOpen to prevent layout shifts when h-0 */}
                 {isOpen && (
                     <div className="px-2 pt-2 pb-3 space-y-4 sm:px-3 text-center">
                         {navItems.map((item) => (
