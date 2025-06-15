@@ -170,8 +170,9 @@ const ProductManagement = () => {
     const [imageFile, setImageFile] = useState(null); // For new image upload file
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [productToDeleteId, setProductToDeleteId] = useState(null);
-      const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false); // State for sidebar visibility
 
+    // State for mobile sidebar visibility
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false); // Added for sidebar
 
     // Memoized function for product image URL generation
     const getProductImageUrl = useCallback((imagePath) => {
@@ -307,7 +308,7 @@ const ProductManagement = () => {
                 );
 
                 if (uploadResponse.data.success) {
-                    imageUrl = uploadResponse.data.file.path; 
+                    imageUrl = uploadResponse.data.file.path;
                     console.log('Image uploaded successfully:', imageUrl);
                     // Or whatever path your backend returns
                 } else {
@@ -340,7 +341,7 @@ const ProductManagement = () => {
                 });
 
             const response = await request;
-            console.l
+            console.log('Product save response:', response.data); // Corrected console.l
             setSuccessMessage(response.data.message || (currentProduct._id ? 'Product updated successfully!' : 'Product added successfully!'));
 
             setIsModalOpen(false);
@@ -389,7 +390,7 @@ const ProductManagement = () => {
     // Display loading spinner when products are initially loading
     if (loading && products.length === 0) {
         return (
-            <div className="flex justify-center items-center h-full min-h-[400px]">
+            <div className="flex justify-center items-center h-screen bg-gray-100">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#E30B5D]"></div>
                 <p className="ml-4 text-gray-600">Loading products...</p>
             </div>
@@ -397,167 +398,186 @@ const ProductManagement = () => {
     }
 
     return (
-        <div className="p-8 bg-white rounded-lg shadow-md font-sans">
-                  <AdminSidebar mobileSidebarOpen={mobileSidebarOpen} setMobileSidebarOpen={setMobileSidebarOpen} />
-
-            <div className='flex flex-row'>
-
-            <h2 className="text-3xl m-auto  font-bold  text-gray-800 mb-6">Product Management</h2>
-            </div>
-
-            <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-semibold text-gray-700">All Products</h3>
-                <button
-                    onClick={handleAddProduct}
-                    className="bg-[#E30B5D] hover:bg-[#c5094f] text-white px-6 py-2 rounded-lg font-medium flex items-center transition-colors duration-200 ease-in-out shadow-md hover:shadow-lg"
-                >
-                    <IconPlus className="mr-2" /> Add New Product
-                </button>
-            </div>
-
-            {/* Message display area */}
-            <MessageBox type="error" message={error} onClose={() => setError(null)} />
-            <MessageBox type="success" message={successMessage} onClose={() => setSuccessMessage(null)} />
-
-            <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {products.map((product) => (
-                            <ProductRow
-                                key={product._id}
-                                product={product}
-                                handleEditProduct={handleEditProduct}
-                                handleDeleteProduct={confirmDeleteProduct} // Use confirmDeleteProduct
-                                getProductImageUrl={getProductImageUrl}
-                            />
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Product Add/Edit Modal */}
-            {isModalOpen && currentProduct && ( // Ensure currentProduct is not null when modal is open
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
-                        <button
-                            onClick={() => setIsModalOpen(false)}
-                            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-                        >
-                            <IconX size={24} />
-                        </button>
-                        <h3 className="text-2xl font-bold mb-6 text-gray-800">
-                            {currentProduct._id ? 'Edit Product' : 'Add New Product'}
-                        </h3>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-                                <input type="text" id="name" name="name" value={currentProduct.name} onChange={handleFormChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-[#E30B5D] focus:border-[#E30B5D] transition-all duration-150 ease-in-out"
-                                    required />
-                                {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
-                            </div>
-                            <div>
-                                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-                                <textarea id="description" name="description" value={currentProduct.description} onChange={handleFormChange}
-                                    rows="3" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-[#E30B5D] focus:border-[#E30B5D] transition-all duration-150 ease-in-out"
-                                    required></textarea>
-                                {formErrors.description && <p className="text-red-500 text-xs mt-1">{formErrors.description}</p>}
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
-                                    <input type="number" id="price" name="price" value={currentProduct.price} onChange={handleFormChange}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-[#E30B5D] focus:border-[#E30B5D] transition-all duration-150 ease-in-out"
-                                        min="0.01" step="0.01" required />
-                                    {formErrors.price && <p className="text-red-500 text-xs mt-1">{formErrors.price}</p>}
-                                </div>
-                                <div>
-                                    <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
-                                    <input type="text" id="category" name="category" value={currentProduct.category} onChange={handleFormChange}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-[#E30B5D] focus:border-[#E30B5D] transition-all duration-150 ease-in-out"
-                                        required />
-                                    {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
-                                </div>
-                            </div>
-                            <div>
-                                <label htmlFor="stock" className="block text-sm font-medium text-gray-700">Stock</label>
-                                <input type="number" id="stock" name="stock" value={currentProduct.stock} onChange={handleFormChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-[#E30B5D] focus:border-[#E30B5D] transition-all duration-150 ease-in-out"
-                                    min="0" required />
-                                {formErrors.stock && <p className="text-red-500 text-xs mt-1">{formErrors.stock}</p>}
-                            </div>
-                            <div>
-                                <label htmlFor="image" className="block text-sm font-medium text-gray-700">Product Image</label>
-                                <input type="file" id="image" name="image" accept="image/*" onChange={handleImageChange}
-                                    className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#E30B5D] file:text-white hover:file:bg-[#c5094f] transition-all duration-150 ease-in-out"
-                                />
-                                {currentProduct.image && !imageFile && (
-                                    <div className="mt-2 text-sm text-gray-600 flex items-center">
-                                        <span className="mr-2">Current Image:</span>
-                                        {/* Display current image using getProductImageUrl */}
-                                        <img src={getProductImageUrl(currentProduct.image)} alt="Current Product Image" width={50} height={50} className="rounded-md" />
-                                    </div>
-                                )}
-                                {imageFile && (
-                                    <div className="mt-2 text-sm text-gray-600">
-                                        <span className="mr-2">Selected New Image:</span>
-                                        <span className="font-semibold">{imageFile.name}</span>
-                                    </div>
-                                )}
-                                {formErrors.image && <p className="text-red-500 text-xs mt-1">{formErrors.image}</p>}
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center">
-                                    <input type="checkbox" id="bestseller" name="bestseller" checked={currentProduct.bestseller} onChange={handleFormChange}
-                                        className="h-4 w-4 text-[#E30B5D] focus:ring-[#E30B5D] border-gray-300 rounded" />
-                                    <label htmlFor="bestseller" className="ml-2 block text-sm text-gray-900">Bestseller</label>
-                                </div>
-                                <div className="flex items-center">
-                                    <input type="checkbox" id="isNew" name="isNew" checked={currentProduct.isNew} onChange={handleFormChange}
-                                        className="h-4 w-4 text-[#E30B5D] focus:ring-[#E30B5D] border-gray-300 rounded" />
-                                    <label htmlFor="isNew" className="ml-2 block text-sm text-gray-900">New Product</label>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end space-x-3 mt-6">
-                                <button type="button" onClick={() => setIsModalOpen(false)}
-                                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 ease-in-out"
-                                >
-                                    <IconX className="mr-2" /> Cancel
-                                </button>
-                                <button type="submit"
-                                    className="px-6 py-2 bg-[#E30B5D] hover:bg-[#c5094f] text-white rounded-lg flex items-center transition-colors duration-200 ease-in-out shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={loading} // Disable save button during loading
-                                >
-                                    <IconSave className="mr-2" /> {loading ? 'Saving...' : 'Save Product'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Confirmation Modal for Delete */}
-            <ConfirmationModal
-                isOpen={isConfirmModalOpen}
-                message="Are you sure you want to delete this product? This action cannot be undone."
-                onConfirm={handleDeleteProduct}
-                onCancel={() => {
-                    setIsConfirmModalOpen(false);
-                    setProductToDeleteId(null);
-                }}
+        <div className="flex min-h-screen bg-gray-100"> {/* Added main flex container */}
+            {/* Admin Sidebar */}
+            <AdminSidebar
+                mobileSidebarOpen={mobileSidebarOpen}
+                setMobileSidebarOpen={setMobileSidebarOpen}
             />
+
+            {/* Main Content Area */}
+            <div className="flex-1 p-4 lg:p-8 transition-all w-screen overflow-x-hidden duration-300 ease-in-out"> {/* Added flex-1 for main content */}
+                {/* Overlay for mobile when sidebar is open */}
+                {mobileSidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black opacity-50 z-40 lg:hidden"
+                        onClick={() => setMobileSidebarOpen(false)}
+                    ></div>
+                )}
+
+                <div className="p-8 bg-white rounded-lg shadow-md font-sans">
+                    <div className='flex flex-row'>
+                        <h2 className="text-3xl m-auto font-bold text-gray-800 mb-6">Product Management</h2>
+                    </div>
+
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-2xl font-semibold text-gray-700">All Products</h3>
+                        <button
+                            onClick={handleAddProduct}
+                            className="bg-[#E30B5D] hover:bg-[#c5094f] text-white px-6 py-2 rounded-lg font-medium flex items-center transition-colors duration-200 ease-in-out shadow-md hover:shadow-lg"
+                        >
+                            <IconPlus className="mr-2" /> Add New Product
+                        </button>
+                    </div>
+
+                    {/* Message display area */}
+                    <MessageBox type="error" message={error} onClose={() => setError(null)} />
+                    <MessageBox type="success" message={successMessage} onClose={() => setSuccessMessage(null)} />
+
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {products.map((product) => (
+                                    <ProductRow
+                                        key={product._id}
+                                        product={product}
+                                        handleEditProduct={handleEditProduct}
+                                        handleDeleteProduct={confirmDeleteProduct} // Use confirmDeleteProduct
+                                        getProductImageUrl={getProductImageUrl}
+                                    />
+                                ))}
+                            </tbody>
+                        </table>
+                        {products.length === 0 && !loading && !error && (
+                            <p className="text-center py-8 text-gray-500">No products found.</p>
+                        )}
+                    </div>
+
+                    {/* Product Add/Edit Modal */}
+                    {isModalOpen && currentProduct && ( // Ensure currentProduct is not null when modal is open
+                        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+                                <button
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                                >
+                                    <IconX size={24} />
+                                </button>
+                                <h3 className="text-2xl font-bold mb-6 text-gray-800">
+                                    {currentProduct._id ? 'Edit Product' : 'Add New Product'}
+                                </h3>
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div>
+                                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+                                        <input type="text" id="name" name="name" value={currentProduct.name} onChange={handleFormChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-[#E30B5D] focus:border-[#E30B5D] transition-all duration-150 ease-in-out"
+                                            required />
+                                        {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+                                    </div>
+                                    <div>
+                                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                                        <textarea id="description" name="description" value={currentProduct.description} onChange={handleFormChange}
+                                            rows="3" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-[#E30B5D] focus:border-[#E30B5D] transition-all duration-150 ease-in-out"
+                                            required></textarea>
+                                        {formErrors.description && <p className="text-red-500 text-xs mt-1">{formErrors.description}</p>}
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
+                                            <input type="number" id="price" name="price" value={currentProduct.price} onChange={handleFormChange}
+                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-[#E30B5D] focus:border-[#E30B5D] transition-all duration-150 ease-in-out"
+                                                min="0.01" step="0.01" required />
+                                            {formErrors.price && <p className="text-red-500 text-xs mt-1">{formErrors.price}</p>}
+                                        </div>
+                                        <div>
+                                            <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
+                                            <input type="text" id="category" name="category" value={currentProduct.category} onChange={handleFormChange}
+                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-[#E30B5D] focus:border-[#E30B5D] transition-all duration-150 ease-in-out"
+                                                required />
+                                            {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="stock" className="block text-sm font-medium text-gray-700">Stock</label>
+                                        <input type="number" id="stock" name="stock" value={currentProduct.stock} onChange={handleFormChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-[#E30B5D] focus:border-[#E30B5D] transition-all duration-150 ease-in-out"
+                                            min="0" required />
+                                        {formErrors.stock && <p className="text-red-500 text-xs mt-1">{formErrors.stock}</p>}
+                                    </div>
+                                    <div>
+                                        <label htmlFor="image" className="block text-sm font-medium text-gray-700">Product Image</label>
+                                        <input type="file" id="image" name="image" accept="image/*" onChange={handleImageChange}
+                                            className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#E30B5D] file:text-white hover:file:bg-[#c5094f] transition-all duration-150 ease-in-out"
+                                        />
+                                        {currentProduct.image && !imageFile && (
+                                            <div className="mt-2 text-sm text-gray-600 flex items-center">
+                                                <span className="mr-2">Current Image:</span>
+                                                {/* Display current image using getProductImageUrl */}
+                                                <img src={getProductImageUrl(currentProduct.image)} alt="Current Product Image" width={50} height={50} className="rounded-md" />
+                                            </div>
+                                        )}
+                                        {imageFile && (
+                                            <div className="mt-2 text-sm text-gray-600">
+                                                <span className="mr-2">Selected New Image:</span>
+                                                <span className="font-semibold">{imageFile.name}</span>
+                                            </div>
+                                        )}
+                                        {formErrors.image && <p className="text-red-500 text-xs mt-1">{formErrors.image}</p>}
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center">
+                                            <input type="checkbox" id="bestseller" name="bestseller" checked={currentProduct.bestseller} onChange={handleFormChange}
+                                                className="h-4 w-4 text-[#E30B5D] focus:ring-[#E30B5D] border-gray-300 rounded" />
+                                            <label htmlFor="bestseller" className="ml-2 block text-sm text-gray-900">Bestseller</label>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <input type="checkbox" id="isNew" name="isNew" checked={currentProduct.isNew} onChange={handleFormChange}
+                                                className="h-4 w-4 text-[#E30B5D] focus:ring-[#E30B5D] border-gray-300 rounded" />
+                                            <label htmlFor="isNew" className="ml-2 block text-sm text-gray-900">New Product</label>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end space-x-3 mt-6">
+                                        <button type="button" onClick={() => setIsModalOpen(false)}
+                                            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 ease-in-out"
+                                        >
+                                            <IconX className="mr-2" /> Cancel
+                                        </button>
+                                        <button type="submit"
+                                            className="px-6 py-2 bg-[#E30B5D] hover:bg-[#c5094f] text-white rounded-lg flex items-center transition-colors duration-200 ease-in-out shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled={loading} // Disable save button during loading
+                                        >
+                                            <IconSave className="mr-2" /> {loading ? 'Saving...' : 'Save Product'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Confirmation Modal for Delete */}
+                    <ConfirmationModal
+                        isOpen={isConfirmModalOpen}
+                        message="Are you sure you want to delete this product? This action cannot be undone."
+                        onConfirm={handleDeleteProduct}
+                        onCancel={() => {
+                            setIsConfirmModalOpen(false);
+                            setProductToDeleteId(null);
+                        }}
+                    />
+                </div>
+            </div>
         </div>
     );
 };
