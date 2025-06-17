@@ -215,7 +215,6 @@ const UserManagement = () => {
   // --- Main Component Render ---
   return (
     <div className="bg-white rounded-lg shadow-md p-6 lg:p-8">
-      <AdminSidebar mobileSidebarOpen={mobileSidebarOpen} setMobileSidebarOpen={setMobileSidebarOpen} />
 
       <div className='flex flex-row'>
         <h2 className="text-3xl m-auto font-bold text-gray-800 mb-6">Users Management</h2>
@@ -225,6 +224,9 @@ const UserManagement = () => {
       <MessageBox type="error" message={error} onClose={() => setError(null)} />
       <MessageBox type="success" message={successMessage} onClose={() => setSuccessMessage(null)} />
 
+      <div className='flex flex-row min-h-full'>
+
+      <AdminSidebar mobileSidebarOpen={mobileSidebarOpen} setMobileSidebarOpen={setMobileSidebarOpen} />
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
           <thead className="bg-gray-50">
@@ -293,6 +295,8 @@ const UserManagement = () => {
           </tbody>
         </table>
       </div>
+      </div>
+      
 
       {/* Single Confirmation Modal */}
       <ConfirmationModal
