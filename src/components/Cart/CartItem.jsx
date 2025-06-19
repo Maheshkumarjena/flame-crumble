@@ -7,11 +7,12 @@ import { FiTrash } from 'react-icons/fi';
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   const placeholderImageUrl = "https://placehold.co/96x96/e0e0e0/555555?text=No+Image"; // A gray placeholder
 
+  console.log("item at cartItem",item)
   // State to manage the image source for the Image component
   const [currentImageUrl, setCurrentImageUrl] = useState(() => {
     // Initialize with the calculated URL, handling potential undefined item.image
     return item.image
-      ? (item.image.startsWith('/') ? item.image : `/images/${item.image}`)
+      ? (item.image)
       : placeholderImageUrl;
   });
 
@@ -19,7 +20,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   useEffect(() => {
     setCurrentImageUrl(
       item.image
-        ? (item.image.startsWith('/') ? item.image : `/images/${item.image}`)
+        ? (item.image)
         : placeholderImageUrl
     );
   }, [item.image]);

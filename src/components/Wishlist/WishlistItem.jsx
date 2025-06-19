@@ -5,7 +5,7 @@ import { FiTrash, FiShoppingCart } from 'react-icons/fi';
 
 const WishlistItem = ({ item, onMoveToCart, onRemove }) => {
   // FIX: Ensure image path starts with '/'
-  const imageUrl = item.image.startsWith('/') ? item.image : `/images/${item.image}`;
+  const imageUrl = item.image
 
   return (
     <div className="flex items-center bg-white rounded-lg shadow-md p-4 space-x-4">

@@ -107,6 +107,7 @@ export default function Shop() {
             // Backend directly returns an array of products
             const newProducts = response.data;
 
+            console.log("fetched products ", newProducts)
             // Use functional update for setProducts to avoid 'products' in dependency array
             setProducts(prevProducts => {
                 const updatedProducts = append ? [...prevProducts, ...newProducts] : newProducts;
@@ -189,7 +190,7 @@ export default function Shop() {
                                             description: product.description || 'No description available',
                                             price: product.price,
                                             category: product.category,
-                                            image: product.image.startsWith('/') ? product.image : `/images/${product.image}`,
+                                            image: product.image,
                                             stock: product.stock > 0, // Convert stock number to boolean
                                             isNew: product.isFeatured, // Using isFeatured as a proxy for new arrival
                                             // bestseller: product.isBestSeller, // Uncomment if you have this field

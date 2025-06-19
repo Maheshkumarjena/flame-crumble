@@ -1,123 +1,60 @@
 import Link from 'next/link';
 
 /**
- * Renders a dynamic footer component.
+ * Renders a simple footer component with navigation links, a "Developed by" credit with WhatsApp link, and copyright.
  *
  * @param {object} props - The component props.
  * @param {string} [props.backgroundColor='bg-black'] - Tailwind CSS class for the footer background color.
  * @param {string} [props.textColor='text-white'] - Tailwind CSS class for the main text color.
  * @param {string} [props.hoverColor='hover:text-[#E30B5D]'] - Tailwind CSS class for link hover color.
- * @param {Array<object>} [props.sections] - An array of objects, each representing a footer section.
+ * @param {Array<object>} [props.navigationLinks] - An array of objects for main navigation links.
  * Each object should have:
- * - `title`: string (The title of the section)
- * - `links`: Array<object> (An array of link objects, each with `name` and `path`)
- * @param {object} [props.newsletter] - Configuration for the newsletter section.
- * - `show`: boolean (Whether to display the newsletter section)
- * - `title`: string (Title of the newsletter section)
- * - `description`: string (Description text for the newsletter)
- * - `placeholder`: string (Placeholder text for the email input)
- * - `buttonText`: string (Text for the subscribe button)
- * @param {Array<object>} [props.socialLinks] - An array of objects for social media links.
- * Each object should have:
- * - `name`: string (e.g., 'Instagram', 'Facebook')
- * - `url`: string (The URL for the social media page)
+ * - `name`: string (The display name of the link)
+ * - `path`: string (The URL path for the link)
+ * @param {string} [props.whatsappNumber] - The WhatsApp number to link to (e.g., '919876543210').
  * @param {string} [props.copyrightText] - The copyright text to display.
  */
 const Footer = ({
   backgroundColor = 'bg-black',
   textColor = 'text-white',
   hoverColor = 'hover:text-[#E30B5D]',
-  sections = [
-    {
-      title: 'About Us',
-      links: [
-        { name: 'Our Story', path: '/our-story' },
-        { name: 'Team', path: '/team' },
-        { name: 'Sustainability', path: '/sustainability' },
-      ],
-    },
-    {
-      title: 'Customer Care',
-      links: [
-        { name: 'Contact', path: '/contact' },
-        { name: 'Shipping', path: '/shipping' },
-        { name: 'Returns', path: '/returns' },
-        { name: 'FAQ', path: '/faq' },
-      ],
-    },
-    {
-      title: 'Legal',
-      links: [
-        { name: 'Terms', path: '/terms' },
-        { name: 'Privacy', path: '/privacy' },
-        { name: 'Cookies', path: '/cookies' },
-      ],
-    },
+  navigationLinks = [
+    { name: 'Home', path: '/' },
+    { name: 'Shop', path: '/shop' },
+    { name: 'About', path: '/about' },
+    { name: 'Contact', path: '/contact' },
   ],
-  newsletter = {
-    show: true,
-    title: 'Newsletter',
-    description: 'Subscribe for updates and promotions',
-    placeholder: 'Your email',
-    buttonText: 'Subscribe',
-  },
-  socialLinks = [
-    { name: 'Instagram', url: '#' },
-    { name: 'Facebook', url: '#' },
-    { name: 'Twitter', url: '#' },
-  ],
+  whatsappNumber = '919876543210', // **Replace with your actual WhatsApp number, including country code**
   copyrightText = `© ${new Date().getFullYear()} flame&crumble. All rights reserved.`,
 }) => {
+  const whatsappLink = `https://wa.me/${whatsappNumber}`;
+
   return (
-    <footer className={`${backgroundColor} ${textColor} py-12`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"> {/* Adjusted grid for newsletter */}
-          {/* Dynamically rendered footer sections */}
-          {sections.map((section) => (
-            <div key={section.title} className="space-y-4">
-              <h3 className="text-lg font-semibold">{section.title}</h3>
-              <ul className="space-y-2">
-                {section.links.map((link) => (
-                  <li key={link.name}>
-                    <Link href={link.path} className={`${hoverColor} transition-colors`}>
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+    <footer className={`${backgroundColor} ${textColor} py-8`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+        {/* Navigation Links */}
+        <nav className="flex space-x-6 mb-4 md:mb-0">
+          {navigationLinks.map((link) => (
+            <Link key={link.name} href={link.path} className={`${hoverColor} transition-colors text-sm`}>
+              {link.name}
+            </Link>
           ))}
+        </nav>
 
-          {/* Dynamically rendered Newsletter section */}
-          {newsletter.show && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{newsletter.title}</h3>
-              <p className="text-gray-400">{newsletter.description}</p>
-              <div className="flex">
-                <input
-                  type="email"
-                  placeholder={newsletter.placeholder}
-                  className="px-4 py-2 w-full rounded-l focus:outline-none text-black"
-                />
-                <button className="bg-[#E30B5D] px-4 py-2 rounded-r hover:bg-[#c5094f] transition-colors">
-                  {newsletter.buttonText}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Bottom bar with social links and copyright */}
-        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center space-x-4 mb-4 md:mb-0">
-            <span className="text-gray-400">Follow us:</span>
-            {socialLinks.map((social) => (
-              <a key={social.name} href={social.url} className={`text-gray-400 ${hoverColor}`}>
-                {social.name}
-              </a>
-            ))}
-          </div>
-          <p className="text-gray-400">{copyrightText}</p>
+        {/* Developed By and Copyright Text */}
+        <div className="flex flex-col items-center md:items-end space-y-2">
+          <p className="text-gray-400 text-sm">
+            Developed by:{' '}
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${hoverColor} transition-colors`}
+            >
+              Mahesh Kumar Jena
+            </a>
+          </p>
+          <p className="text-gray-400 text-sm">{copyrightText}</p>
         </div>
       </div>
     </footer>

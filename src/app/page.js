@@ -20,14 +20,14 @@ export default function Home() {
         <section className="relative  h-screen flex items-center justify-center bg-black text-white">
           <div className="absolute inset-0">
             <Image
-              src="/hero-bg.jpg"
+              src="/heartCandleTray.jpg"
               alt="Handcrafted delights"
               fill
               className="object-cover opacity-50"
             />
           </div>
-          <div className="relative z-10 text-center px-4">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">Handcrafted Delights</h1>
+          <div className="relative z-10 text-center px-2">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4 text-rose-400">  <strong className=' text-rose-300' >  Flame </strong>  &  <strong className='text-rose-300'> crumble </strong></h1>
             <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
               Dreams for refined yourself, works, and home
             </p>
@@ -57,20 +57,20 @@ export default function Home() {
               {
                 title: 'Candles',
                 description: 'Discover Comfort',
-                image: '/images/candles.jpg',
+                image: '/glassFlowerCandle.jpg',
                 link: '/shop?category=candles',
               },
               {
-                title: 'Cookies',
-                description: 'Take Our Cookies',
-                image: '/images/cookies.jpg',
-                link: '/shop?category=cookies',
+                title: 'Chocolates',
+                description: 'Handmade guilt free chocolates ',
+                image: '/hmChocolates.webp',
+                link: '/shop?category=chocolates',
               },
               {
-                title: 'Artisan Chocolates',
-                description: 'Indulge in Chocolates',
-                image: '/images/chocolates.jpg',
-                link: '/shop?category=chocolates',
+                title: 'Cookies',
+                description: 'Indulge in rich flavoured cookies',
+                image: '/handMadeCookies.webp',
+                link: '/shop?category=cookies',
               },
             ].map((collection) => (
               <div key={collection.title} className="relative group overflow-hidden rounded-lg">
@@ -81,9 +81,9 @@ export default function Home() {
                   height={400}
                   className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <h3 className="text-2xl font-bold text-white">{collection.title}</h3>
-                  <p className="text-white mb-4">{collection.description}</p>
+                <div className="absolute inset-0   bg-opacity-40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 group-hover:backdrop-blur-xs transition-opacity">
+                  <h3 className="text-2xl text-black font-bold  ">{collection.title}</h3>
+                  <p className="text-black mb-4">{collection.description}</p>
                   <Link
                     href={collection.link}
                     className="bg-[#E30B5D] hover:bg-[#c5094f] text-white px-6 py-2 rounded-full text-sm font-medium transition-colors"
@@ -101,7 +101,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2">
               <Image
-                src="/images/story.jpg"
+                src="/story.jpg"
                 alt="Our story"
                 width={600}
                 height={400}

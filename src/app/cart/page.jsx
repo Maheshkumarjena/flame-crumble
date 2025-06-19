@@ -31,6 +31,7 @@ export default function Cart() {
   const [localCartErrorMessage, setLocalCartErrorMessage] = useState('');
   const [initialAuthCheckDone, setInitialAuthCheckDone] = useState(false);
 
+  console.log('cart items', cart)
   // Effect to check auth status on component mount
   useEffect(() => {
     dispatch(checkAuthStatus());
