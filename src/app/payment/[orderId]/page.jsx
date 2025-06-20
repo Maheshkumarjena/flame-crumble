@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
-import { selectAuthUser, selectIsAuthenticated, selectAuthLoading } from '@/lib/selectors';
+import { selectAuthUser, selectIsAuthenticated, selectAuthLoading } from '@/lib/features/auth/selector';
 import axios from 'axios';
 
 // Re-using the MessageBox component from CheckoutPage
