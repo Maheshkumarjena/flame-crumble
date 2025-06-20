@@ -22,7 +22,7 @@ const WishlistItem = ({ item, onMoveToCart, onRemove }) => {
       <div className="flex-grow">
         <h3 className="font-semibold text-lg">{item.name}</h3>
         {item.variant && <p className="text-gray-600 text-sm">{item.variant}</p>}
-        <p className="text-[#E30B5D] font-bold mt-1">${item.price.toFixed(2)}</p>
+        <p className="text-[#E30B5D] font-bold mt-1">₹{item.price.toFixed(2)}</p>
       </div>
       
       <div className="flex flex-col space-y-2">

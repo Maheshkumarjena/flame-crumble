@@ -49,7 +49,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
       <div className="flex-grow">
         <h3 className="font-semibold text-lg">{item.name || 'Product Name'}</h3>
         {item.variant && <p className="text-gray-600 text-sm">{item.variant}</p>}
-        <p className="text-[#E30B5D] font-bold mt-1">${item.price !== undefined && item.price !== null ? item.price.toFixed(2) : '0.00'}</p>
+        <p className="text-[#E30B5D] font-bold mt-1">₹{item.price !== undefined && item.price !== null ? item.price.toFixed(2) : '0.00'}</p>
       </div>
       
       <div className="flex items-center space-x-2">

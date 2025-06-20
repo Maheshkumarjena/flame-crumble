@@ -13,6 +13,9 @@ import { selectIsAuthenticated, selectAuthLoading, selectAuthError } from '@/lib
 import { checkAuthStatus } from '@/lib/features/auth/authSlice';
 
 export default function Cart() {
+
+  console.log("renders========>")
+  
   const router = useRouter();
   const dispatch = useDispatch();
 

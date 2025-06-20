@@ -6,15 +6,15 @@ const CartSummary = ({ subtotal, shipping, total }) => {
       <div className="space-y-3 mb-6">
         <div className="flex justify-between">
           <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
+          <span>₹{subtotal.toFixed(2)}</span>
         </div>
         <div className="flex justify-between">
           <span>Shipping</span>
-          <span>${shipping.toFixed(2)}</span>
+          <span>₹{shipping.toFixed(2)}</span>
         </div>
         <div className="border-t pt-3 flex justify-between font-semibold">
           <span>Total</span>
-          <span>${total.toFixed(2)}</span>
+          <span>₹{total.toFixed(2)}</span>
         </div>
       </div>
     </div>
